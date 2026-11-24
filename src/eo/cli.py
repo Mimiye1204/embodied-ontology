@@ -57,7 +57,7 @@ def _save(crud: OntologyCRUD, args) -> None:
         json.dump(list(crud.entities.values()), f, ensure_ascii=False, indent=2)
 
 
-def _run(crud: OntologyCRUD, args, fn, save: bool = True) -> int:
+def _run(crud: OntologyCRUD, args, fn, save: bool = True, ok_msg: Optional[str] = None) -> int:
     try:
         fn()
     except CRUDError as e:
@@ -69,6 +69,8 @@ def _run(crud: OntologyCRUD, args, fn, save: bool = True) -> int:
         return 1
     if save:
         _save(crud, args)
+    if ok_msg:
+        print(ok_msg)
     return 0
 
 
@@ -97,31 +99,40 @@ def cmd_list(crud, args) -> int:
 
 
 def cmd_create(crud, args) -> int:
-    return _run(crud, args, lambda: crud.create(_parse_json(args.entity)))
+    ent = _parse_json(args.entity)
+    return _run(crud, args, lambda: crud.create(ent),
+                ok_msg=f"✓ 已创建 {ent.get('id')}（{ent.get('type')}）")
 
 
 def cmd_update(crud, args) -> int:
-    return _run(crud, args, lambda: crud.update(args.id, _parse_json(args.patch)))
+    return _run(crud, args, lambda: crud.update(args.id, _parse_json(args.patch)),
+                ok_msg=f"✓ 已更新 {args.id}")
 
 
 def cmd_set(crud, args) -> int:
-    return _run(crud, args, lambda: crud.set_property(args.id, args.slot, _parse_json(args.value)))
+    return _run(crud, args, lambda: crud.set_property(args.id, args.slot, _parse_json(args.value)),
+                ok_msg=f"✓ 已设置 {args.id}.{args.slot}")
 
 
 def cmd_unset(crud, args) -> int:
-    return _run(crud, args, lambda: crud.unset_property(args.id, args.slot))
+    return _run(crud, args, lambda: crud.unset_property(args.id, args.slot),
+                ok_msg=f"✓ 已移除 {args.id}.{args.slot}")
 
 
 def cmd_link(crud, args) -> int:
-    return _run(crud, args, lambda: crud.link(args.src, args.dst, args.type))
+    return _run(crud, args, lambda: crud.link(args.src, args.dst, args.type),
+                ok_msg=f"✓ 已建立 {args.src} --{args.type}--> {args.dst}")
 
 
 def cmd_unlink(crud, args) -> int:
-    return _run(crud, args, lambda: crud.unlink(args.src, args.dst, args.type))
+    return _run(crud, args, lambda: crud.unlink(args.src, args.dst, args.type),
+                ok_msg=f"✓ 已移除 {args.src} --{args.type}--> {args.dst}")
 
 
 def cmd_delete(crud, args) -> int:
-    return _run(crud, args, lambda: crud.delete(args.id, physical=args.physical))
+    mode = "物理删除" if args.physical else "软删除（deprecated）"
+    return _run(crud, args, lambda: crud.delete(args.id, physical=args.physical),
+                ok_msg=f"✓ 已删除 {args.id}（{mode}）")
 
 
 def cmd_validate(crud, args) -> int:
