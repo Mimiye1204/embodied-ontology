@@ -1,0 +1,734 @@
+@prefix eo: <https://ontology.huilun.cn/embodied/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+eo:ActionLogShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:result ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:detail ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:action_type ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:actor ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:occurred_at ],
+        [ sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path eo:target ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ] ;
+    sh:targetClass eo:ActionLog .
+
+eo:AffectsBodypartTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 affects_bodypart 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:affects_bodypart ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:affects_bodypart .
+
+eo:AffectsCapabilityTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 affects_capability 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:affects_capability ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:affects_capability .
+
+eo:AssignedToTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 assigned_to 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:assigned_to ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:assigned_to .
+
+eo:AtSiteTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 at_site 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:at_site ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:at_site .
+
+eo:BodyPartShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:load_capacity_kg ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:dof ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:in ( "degraded" "fault" "ok" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:health ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:torque_limit_nm ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:grip_force_n ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:max_speed_ms ],
+        [ sh:class eo:BodyPart ;
+            sh:maxCount 1 ;
+            sh:path eo:part_of ],
+        [ sh:class eo:Capability ;
+            sh:path eo:provides_capability ] ;
+    sh:targetClass eo:BodyPart .
+
+eo:CapabilityCapabilityCodeKeyUniqueShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "唯一键冲突（capability_code_key）：{$this}" ;
+            sh:prefixes eo: ;
+            sh:select """SELECT $this ?other WHERE {
+                    $this eo:code ?v_code .
+                    ?other eo:code ?v_code .
+                    FILTER (?other != $this && bound(?v_code)) }""" ] ;
+    sh:targetClass eo:Capability .
+
+eo:CapabilityShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:payload_kg ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:code ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ] ;
+    sh:targetClass eo:Capability .
+
+eo:ConstrainsTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 constrains 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:constrains ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:constrains .
+
+eo:ConstraintShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:in ( "gripper" "load" "pose" "speed" "torque" "workspace" ) ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:constraint_type ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path eo:constrains ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:suggested_rewrite ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:expression ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:unit ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:path eo:threshold ] ;
+    sh:targetClass eo:Constraint .
+
+eo:EntityRefTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 entity_ref 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:entity_ref ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:entity_ref .
+
+eo:FaultEventShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:class eo:BodyPart ;
+            sh:path eo:affects_bodypart ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:class eo:FaultMode ;
+            sh:maxCount 1 ;
+            sh:path eo:of_mode ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:detected_at ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:resolved_at ],
+        [ sh:in ( "acknowledged" "active" "resolved" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:status ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:in ( "critical" "info" "warning" ) ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:severity ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:class eo:Robot ;
+            sh:maxCount 1 ;
+            sh:path eo:reported_by ] ;
+    sh:targetClass eo:FaultEvent .
+
+eo:FaultModeFaultmodeCodeKeyUniqueShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "唯一键冲突（faultmode_code_key）：{$this}" ;
+            sh:prefixes eo: ;
+            sh:select """SELECT $this ?other WHERE {
+                    $this eo:mode_code ?v_mode_code .
+                    ?other eo:mode_code ?v_mode_code .
+                    FILTER (?other != $this && bound(?v_mode_code)) }""" ] ;
+    sh:targetClass eo:FaultMode .
+
+eo:FaultModeShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:class eo:Capability ;
+            sh:path eo:affects_capability ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:mode_code ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:in ( "critical" "info" "warning" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:default_severity ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:class eo:BodyPart ;
+            sh:path eo:affects_bodypart ] ;
+    sh:targetClass eo:FaultMode .
+
+eo:HasPartTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 has_part 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:has_part ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:has_part .
+
+eo:InvolvesObjectTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 involves_object 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:involves_object ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:involves_object .
+
+eo:LocatedAtTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 located_at 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:located_at ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:located_at .
+
+eo:MeasuresTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 measures 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:measures ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:measures .
+
+eo:ObjectObjectCodeKeyUniqueShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "唯一键冲突（object_code_key）：{$this}" ;
+            sh:prefixes eo: ;
+            sh:select """SELECT $this ?other WHERE {
+                    $this eo:object_code ?v_object_code .
+                    ?other eo:object_code ?v_object_code .
+                    FILTER (?other != $this && bound(?v_object_code)) }""" ] ;
+    sh:targetClass eo:Object .
+
+eo:ObjectShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:has_handle ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:weight_kg ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:in ( "dry" "rough" "slippery" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:surface ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:has_thread ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:is_fragile ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:is_container ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:object_code ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
+    sh:targetClass eo:Object .
+
+eo:OfModeTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 of_mode 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:of_mode ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:of_mode .
+
+eo:ParentTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 parent 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:parent ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:parent .
+
+eo:PartOfTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 part_of 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:part_of ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:part_of .
+
+eo:ProvidesCapabilityTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 provides_capability 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:provides_capability ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:provides_capability .
+
+eo:ReportedByTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 reported_by 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:reported_by ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:reported_by .
+
+eo:RequiresCapabilityTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 requires_capability 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:requires_capability ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:requires_capability .
+
+eo:RobotRobotSerialKeyUniqueShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "唯一键冲突（robot_serial_key）：{$this}" ;
+            sh:prefixes eo: ;
+            sh:select """SELECT $this ?other WHERE {
+                    $this eo:serial ?v_serial .
+                    ?other eo:serial ?v_serial .
+                    FILTER (?other != $this && bound(?v_serial)) }""" ] ;
+    sh:targetClass eo:Robot .
+
+eo:RobotShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:serial ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:model ],
+        [ sh:class eo:BodyPart ;
+            sh:path eo:has_part ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:firmware_version ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:class eo:Site ;
+            sh:maxCount 1 ;
+            sh:path eo:located_at ],
+        [ sh:in ( "decommissioned" "maintenance" "offline" "online" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:status ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ] ;
+    sh:targetClass eo:Robot .
+
+eo:SiteShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:class eo:Site ;
+            sh:maxCount 1 ;
+            sh:path eo:parent ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:code ] ;
+    sh:targetClass eo:Site .
+
+eo:SiteSiteCodeKeyUniqueShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "唯一键冲突（site_code_key）：{$this}" ;
+            sh:prefixes eo: ;
+            sh:select """SELECT $this ?other WHERE {
+                    $this eo:code ?v_code .
+                    ?other eo:code ?v_code .
+                    FILTER (?other != $this && bound(?v_code)) }""" ] ;
+    sh:targetClass eo:Site .
+
+eo:TargetTargetExistsShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "悬空引用：{$this} 的 target 指向数据集中不存在的实体" ;
+            sh:prefixes eo: ;
+            sh:select "SELECT $this ?o WHERE { $this eo:target ?o . FILTER NOT EXISTS { ?o ?p ?v } }" ] ;
+    sh:targetSubjectsOf eo:target .
+
+eo:TaskShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:deadline ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:class eo:Site ;
+            sh:maxCount 1 ;
+            sh:path eo:at_site ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:in ( "constrained" "feasible" "infeasible" "rewrite" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:verdict ],
+        [ sh:class eo:Capability ;
+            sh:minCount 1 ;
+            sh:path eo:requires_capability ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:status ],
+        [ sh:class eo:Robot ;
+            sh:maxCount 1 ;
+            sh:path eo:assigned_to ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:path eo:priority ],
+        [ sh:class eo:Object ;
+            sh:maxCount 1 ;
+            sh:path eo:involves_object ] ;
+    sh:targetClass eo:Task .
+
+eo:TelemetryMetricMetricCodeKeyUniqueShape a sh:NodeShape ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+            sh:message "唯一键冲突（metric_code_key）：{$this}" ;
+            sh:prefixes eo: ;
+            sh:select """SELECT $this ?other WHERE {
+                    $this eo:metric_code ?v_metric_code .
+                    ?other eo:metric_code ?v_metric_code .
+                    FILTER (?other != $this && bound(?v_metric_code)) }""" ] ;
+    sh:targetClass eo:TelemetryMetric .
+
+eo:TelemetryMetricShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:path eo:min_value ],
+        [ sh:in ( "bool" "float" "int" ) ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:value_type ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:path eo:max_value ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 1 ;
+            sh:path eo:retention_days ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:unit ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:metric_code ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path eo:measures ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:sampling_hz ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ] ;
+    sh:targetClass eo:TelemetryMetric .
+
+eo:TelemetryPointShape a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:value ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path eo:entity_ref ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:time ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:metric_code ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ] ;
+    sh:targetClass eo:TelemetryPoint .
+

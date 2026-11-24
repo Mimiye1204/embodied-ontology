@@ -1,0 +1,69 @@
+[
+  {"id": "eo:site/hq", "type": "Site", "label": "总部", "code": "HQ-001", "created_at": "2026-11-20T08:00:00+08:00"},
+
+  {"id": "eo:robot/ti5", "type": "Robot", "label": "钛虎 TI5", "serial": "TI5-T170C-001", "model": "T170C 轮式人形", "status": "online", "firmware_version": "2.1.7.1", "located_at": "eo:site/hq", "has_part": ["eo:part/ti5/head", "eo:part/ti5/arm", "eo:part/ti5/waist", "eo:part/ti5/leg", "eo:part/ti5/base"], "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:robot/bx2", "type": "Robot", "label": "豹小秘2", "serial": "BX2-001", "model": "豹小秘2 服务机器人", "status": "online", "located_at": "eo:site/hq", "has_part": ["eo:part/bx2/base", "eo:part/bx2/head"], "created_at": "2026-11-20T08:00:00+08:00"},
+
+  {"id": "eo:part/ti5/head", "type": "BodyPart", "label": "头部", "dof": 3, "health": "ok", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:part/ti5/arm", "type": "BodyPart", "label": "手臂", "dof": 7, "health": "ok", "provides_capability": ["eo:cap/pour", "eo:cap/push"], "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:part/ti5/wrist", "type": "BodyPart", "label": "腕关节", "health": "ok", "part_of": "eo:part/ti5/arm", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:part/ti5/six-axis-force", "type": "BodyPart", "label": "六维力传感器", "health": "ok", "part_of": "eo:part/ti5/wrist", "provides_capability": ["eo:cap/force-control"], "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:part/ti5/dexterous-hand", "type": "BodyPart", "label": "灵巧手", "dof": 6, "grip_force_n": 40.0, "health": "ok", "part_of": "eo:part/ti5/arm", "provides_capability": ["eo:cap/power-grasp", "eo:cap/pinch", "eo:cap/press"], "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:part/ti5/waist", "type": "BodyPart", "label": "腰部", "dof": 3, "health": "ok", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:part/ti5/leg", "type": "BodyPart", "label": "折叠腿", "dof": 2, "health": "ok", "provides_capability": ["eo:cap/sitting"], "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:part/ti5/base", "type": "BodyPart", "label": "轮式底盘", "dof": 0, "health": "ok", "provides_capability": ["eo:cap/locomotion", "eo:cap/push"], "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:part/bx2/base", "type": "BodyPart", "label": "底盘", "dof": 0, "health": "ok", "provides_capability": ["eo:cap/locomotion"], "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:part/bx2/head", "type": "BodyPart", "label": "头部", "dof": 2, "health": "ok", "provides_capability": ["eo:cap/speech", "eo:cap/face-recognition"], "created_at": "2026-11-20T08:00:00+08:00"},
+
+  {"id": "eo:cap/power-grasp", "type": "Capability", "label": "包握", "code": "power-grasp", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:cap/pinch", "type": "Capability", "label": "灵巧捏取", "code": "pinch", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:cap/force-control", "type": "Capability", "label": "力控", "code": "force-control", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:cap/pour", "type": "Capability", "label": "倒水", "code": "pour", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:cap/press", "type": "Capability", "label": "按压", "code": "press", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:cap/push", "type": "Capability", "label": "推", "code": "push", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:cap/locomotion", "type": "Capability", "label": "移动", "code": "locomotion", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:cap/sitting", "type": "Capability", "label": "坐下", "code": "sitting", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:cap/speech", "type": "Capability", "label": "语音交互", "code": "speech", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:cap/face-recognition", "type": "Capability", "label": "人脸识别", "code": "face-recognition", "created_at": "2026-11-20T08:00:00+08:00"},
+
+  {"id": "eo:object/cup", "type": "Object", "label": "杯子", "object_code": "OBJ-CUP", "has_handle": true, "weight_kg": 0.3, "surface": "dry", "is_container": true, "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:object/cup-slip", "type": "Object", "label": "湿滑杯子", "object_code": "OBJ-CUP-SLIP", "has_handle": true, "weight_kg": 0.3, "surface": "slippery", "is_container": true, "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:object/egg", "type": "Object", "label": "鸡蛋", "object_code": "OBJ-EGG", "weight_kg": 0.05, "is_fragile": true, "surface": "dry", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:object/coin", "type": "Object", "label": "硬币", "object_code": "OBJ-COIN", "weight_kg": 0.01, "surface": "dry", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:object/kettle", "type": "Object", "label": "满水壶", "object_code": "OBJ-KETTLE", "has_handle": true, "weight_kg": 2.0, "surface": "dry", "is_container": true, "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:object/button", "type": "Object", "label": "按钮", "object_code": "OBJ-BUTTON", "weight_kg": 0.01, "surface": "dry", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:object/box", "type": "Object", "label": "箱子", "object_code": "OBJ-BOX", "weight_kg": 30.0, "surface": "dry", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:object/door", "type": "Object", "label": "门", "object_code": "OBJ-DOOR", "has_handle": true, "weight_kg": 5.0, "surface": "dry", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:object/bottle", "type": "Object", "label": "瓶", "object_code": "OBJ-BOTTLE", "has_thread": true, "weight_kg": 0.4, "surface": "dry", "is_container": true, "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:object/chair", "type": "Object", "label": "椅子", "object_code": "OBJ-CHAIR", "weight_kg": 0.0, "surface": "dry", "created_at": "2026-11-20T08:00:00+08:00"},
+
+  {"id": "eo:constraint/wrist-torque-limit", "type": "Constraint", "label": "腕力矩上限", "constraint_type": "torque", "expression": "τ = m·g·l ≤ 0.5 N·m（l=0.3 m）", "threshold": 0.5, "unit": "Nm", "suggested_rewrite": "先减轻负载（容器可倒水）或缩短力臂/双手协作", "constrains": "eo:part/ti5/wrist", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:constraint/arm-load-limit", "type": "Constraint", "label": "臂负载上限", "constraint_type": "load", "expression": "m ≤ 3.0 kg", "threshold": 3.0, "unit": "kg", "suggested_rewrite": "改用底盘推行，或分解为多次搬运", "constrains": "eo:part/ti5/arm", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:constraint/no-hip", "type": "Constraint", "label": "无臀部位形限制", "constraint_type": "pose", "expression": "sitting 需臀部支撑；折叠腿无臀部位形", "suggested_rewrite": "改写任务意义：不做「坐下」，改为「靠近并语音指引」", "constrains": "eo:part/ti5/leg", "created_at": "2026-11-20T08:00:00+08:00"},
+
+  {"id": "eo:faultmode/force-sensor-failure", "type": "FaultMode", "label": "六维力传感器失效", "mode_code": "force-sensor-failure", "affects_bodypart": ["eo:part/ti5/six-axis-force"], "affects_capability": ["eo:cap/force-control"], "default_severity": "critical", "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:faultmode/hand-motor-failure", "type": "FaultMode", "label": "灵巧手电机失效", "mode_code": "hand-motor-failure", "affects_bodypart": ["eo:part/ti5/dexterous-hand"], "affects_capability": ["eo:cap/power-grasp", "eo:cap/pinch", "eo:cap/press"], "default_severity": "critical", "created_at": "2026-11-20T08:00:00+08:00"},
+
+  {"id": "eo:task/carry-cup", "type": "Task", "label": "端杯子", "status": "pending", "priority": 5, "requires_capability": ["eo:cap/power-grasp"], "involves_object": "eo:object/cup", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:00:00+08:00"},
+  {"id": "eo:task/carry-slip-cup", "type": "Task", "label": "端湿滑杯", "status": "pending", "requires_capability": ["eo:cap/power-grasp"], "involves_object": "eo:object/cup-slip", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:01:00+08:00"},
+  {"id": "eo:task/carry-kettle", "type": "Task", "label": "端满水壶", "status": "pending", "requires_capability": ["eo:cap/power-grasp"], "involves_object": "eo:object/kettle", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:02:00+08:00"},
+  {"id": "eo:task/grasp-egg", "type": "Task", "label": "抓鸡蛋", "status": "executing", "priority": 7, "requires_capability": ["eo:cap/power-grasp", "eo:cap/force-control"], "involves_object": "eo:object/egg", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:03:00+08:00"},
+  {"id": "eo:task/pinch-coin", "type": "Task", "label": "捏硬币", "status": "pending", "requires_capability": ["eo:cap/pinch", "eo:cap/force-control"], "involves_object": "eo:object/coin", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:04:00+08:00"},
+  {"id": "eo:task/pour-water", "type": "Task", "label": "倒水", "status": "pending", "requires_capability": ["eo:cap/power-grasp", "eo:cap/pour"], "involves_object": "eo:object/cup", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:05:00+08:00"},
+  {"id": "eo:task/press-button", "type": "Task", "label": "按按钮", "status": "succeeded", "requires_capability": ["eo:cap/press"], "involves_object": "eo:object/button", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:06:00+08:00"},
+  {"id": "eo:task/push-box", "type": "Task", "label": "推箱子", "status": "pending", "requires_capability": ["eo:cap/push"], "involves_object": "eo:object/box", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:07:00+08:00"},
+  {"id": "eo:task/sit-down", "type": "Task", "label": "坐下", "status": "pending", "requires_capability": ["eo:cap/sitting"], "involves_object": "eo:object/chair", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:08:00+08:00"},
+  {"id": "eo:task/open-door", "type": "Task", "label": "开门", "status": "pending", "requires_capability": ["eo:cap/power-grasp"], "involves_object": "eo:object/door", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:09:00+08:00"},
+  {"id": "eo:task/unscrew-cap", "type": "Task", "label": "拧瓶盖", "status": "pending", "requires_capability": ["eo:cap/pinch"], "involves_object": "eo:object/bottle", "assigned_to": "eo:robot/ti5", "created_at": "2026-11-24T09:10:00+08:00"},
+  {"id": "eo:task/guide-visitor", "type": "Task", "label": "语音引导访客", "status": "dispatched", "priority": 8, "requires_capability": ["eo:cap/speech", "eo:cap/face-recognition"], "assigned_to": "eo:robot/bx2", "created_at": "2026-11-24T09:11:00+08:00"},
+  {"id": "eo:task/carry-cup-by-bx2", "type": "Task", "label": "端杯子（派豹小秘）", "status": "pending", "requires_capability": ["eo:cap/power-grasp"], "involves_object": "eo:object/cup", "assigned_to": "eo:robot/bx2", "created_at": "2026-11-24T09:12:00+08:00"},
+
+  {"id": "eo:event/fault-001", "type": "FaultEvent", "label": "六维力传感器故障", "of_mode": "eo:faultmode/force-sensor-failure", "affects_bodypart": "eo:part/ti5/six-axis-force", "severity": "critical", "status": "active", "detected_at": "2026-11-24T10:30:00+08:00", "reported_by": "eo:robot/ti5", "created_at": "2026-11-24T10:30:00+08:00"},
+
+  {"id": "eo:log/dispatch-001", "type": "ActionLog", "label": "下发端杯子任务", "action_type": "task.dispatch", "actor": "admin", "target": "eo:task/carry-cup", "detail": "{\"priority\":5}", "result": "ok", "occurred_at": "2026-11-24T09:00:30+08:00", "created_at": "2026-11-24T09:00:30+08:00"},
+
+  {"id": "eo:metric/force-reading", "type": "TelemetryMetric", "label": "六维力读数", "metric_code": "force_reading", "measures": "eo:part/ti5/six-axis-force", "value_type": "float", "unit": "N", "min_value": 0.0, "max_value": 100.0, "sampling_hz": 100.0, "retention_days": 30, "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:metric/joint-angle", "type": "TelemetryMetric", "label": "关节角度", "metric_code": "joint_angle", "measures": "eo:part/ti5/wrist", "value_type": "float", "unit": "deg", "sampling_hz": 1.0, "retention_days": 30, "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:metric/battery", "type": "TelemetryMetric", "label": "电量", "metric_code": "battery", "measures": "eo:robot/ti5", "value_type": "float", "unit": "%", "min_value": 0.0, "max_value": 100.0, "sampling_hz": 0.1, "retention_days": 90, "created_at": "2026-11-20T08:00:00+08:00"},
+  {"id": "eo:metric/task-progress", "type": "TelemetryMetric", "label": "任务进度", "metric_code": "task_progress", "measures": "eo:task/carry-cup", "value_type": "float", "unit": "%", "min_value": 0.0, "max_value": 100.0, "sampling_hz": 0.0, "retention_days": 90, "created_at": "2026-11-20T08:00:00+08:00"}
+]

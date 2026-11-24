@@ -1,0 +1,76 @@
+# 具身本体论引擎（Embodied Ontology Engine）
+
+多机器人编队的具身本体论工程实现（Schema v1.0.0）：
+**LinkML 定义 Schema → SHACL 校验（L0+L1）→ JSON-LD 全域交换 → Neo4j 图存储 → 自研规则引擎（L2）→ TimescaleDB 时序库**。
+
+> 设计文档（先读这三份）：
+> - [docs/01-linkml-schema-design.md](docs/01-linkml-schema-design.md) — Schema 设计（13 个 ObjectType、ID 规范、ADR、演进策略）
+> - [docs/02-neo4j-mapping-spec.md](docs/02-neo4j-mapping-spec.md) — 节点-边映射规范（类型映射、约束/索引 DDL、批量加载、查询模板）
+> - [docs/03-shacl-framework.md](docs/03-shacl-framework.md) — 校验框架（三层架构、四道校验门、SPARQL 形状模式库）
+
+## 架构
+
+```
+schema/embodied_ontology.yaml （LinkML，单一事实来源，v1.0.0）
+  ├─ 运行时内省（eo/schema.py: SchemaView）
+  ├─→ L0 SHACL 形状自动生成（eo/shacl/shapes.py：closed/枚举/数值域/唯一键）
+  ├─→ L1 形状（引用完整性自动生成 + domain.ttl 手写领域不变量）
+  └─→ JSON-LD @context 自动推导（eo/jsonld/context.py）
+       │
+ 数据层 ABox：examples/fleet.json（2 机器人编队 57 实体）──Gate A SHACL──→ 图存储
+       │                                              （写入前校验 L0+L1）
+ 存储层：GraphStore 接口 ── MemoryStore（本地） / Neo4jStore（生产，docs/02 规范）
+       │
+ 计算层（L2 规则引擎，eo/rules/）：正向链+增量打印（演绎/约束/归纳）
+       ├─ 动作拦截 intercept.py —— 约束库驱动（torque/load/pose/surface → 改写建议）
+       ├─ 任务可达性 reachability.py —— 能力覆盖 + 健康状态 + 指派机器人部件树
+       └─ 故障传播 faults.py —— FaultMode 模式库驱动（正向级联 + 反向根因）
+       │  ▲
+       ▼  │ 归纳写回（滑移检测 → surface=slippery → 力度×1.5，写回后仍过 SHACL）
+ 时序层：TelemetryStore 接口 ── SqliteTelemetryStore（本地）
+       / TimescaleTelemetryStore（生产，ddl/timescale_schema.sql）
+       测点键 (entity_ref, metric) 必须命中 TelemetryMetric 注册表（L1 校验）
+       │
+ 交换层：JSON-LD 双向 round-trip（export/import，57 实体语义无损，测试锁定）
+```
+
+## 快速开始
+
+```bash
+# 依赖（.venv 已建；重装走清华镜像）
+.venv/Scripts/python.exe -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 端到端验证（9 段流水线，负例演示 SHACL 拦截）
+.venv/Scripts/python.exe demo.py
+
+# 测试（22 项：L0/L1 拦截、规则、可达性、故障、拦截、round-trip、时序）
+.venv/Scripts/python.exe tests/run_tests.py
+
+# 浏览器可视化报告（本体图 + 正常/故障切换 + 推理面板）
+.venv/Scripts/python.exe report.py
+```
+
+## 关键能力演示（demo 输出）
+
+- **编队可达性**：同一「端杯子」任务，派 TI5 → 可实现；派豹小秘2 → 不可达（能力提供者不在其部件树内）；「语音引导访客」派豹小秘2 → 可实现
+- **约束库拦截**：满水壶（力矩 0.6 > 0.5）→ 先减负；箱子（力矩+负载双超）→ 底盘推行；坐下（无臀部位形）→ 改写任务意义；湿滑杯 → 力度 ×1.5
+- **模式库故障传播**：事件 → 模式 force-sensor-failure → 力控失效 → 抓鸡蛋/捏硬币失败；端杯子依赖隔离不受影响；反向根因回溯到六维力传感器
+- **归纳闭环**：力读数骤降 67% → 写回 surface=slippery → 规则重跑 → grip_factor=1.5 → JSON-LD 带出
+- **SHACL 七类负例拦截**：唯一键冲突 / 悬空引用 / 未注册测点 / 能力无提供者 / 负重量 / 枚举越界 / 未知属性
+
+## 扩展路径
+
+| 想做什么 | 改哪里 |
+|---|---|
+| 加对象类型/属性 | `schema/embodied_ontology.yaml`（形状/@context/加载器自动跟随，见 docs/01 §7 迁移安全表） |
+| 加实体 | `examples/fleet.json`（Gate A 自动校验） |
+| 加领域不变量 | `src/eo/shacl/domain.ttl`（docs/03 §5 模式库） |
+| 加推理规则 | `src/eo/rules/domain.py`（正向链增量打印） |
+| 加故障场景 | 加一条 FaultMode 数据（不改代码） |
+| 切生产存储 | `Neo4jStore` + `TimescaleTelemetryStore`（接口不变；DDL 见 ddl/） |
+
+## 生产切换清单
+
+1. Neo4j：执行 `ddl/neo4j_schema.cypher` → 工厂换 `Neo4jStore`
+2. TimescaleDB：执行 `ddl/timescale_schema.sql` → 工厂换 `TimescaleTelemetryStore`
+3. 命名空间：上线前把 `eo:` 前缀换成正式域名（schema 一处 + docs/01 §2）

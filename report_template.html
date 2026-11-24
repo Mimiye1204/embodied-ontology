@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>具身本体论引擎 · 可视化报告</title>
+<style>
+  :root{
+    --bg:#0b0b0d; --surface:#141519; --surface2:#1a1b20; --line:#26282e;
+    --text:#e8e8e6; --muted:#8a8d96;
+    --obj:#3987e5; --prop:#199e70; --cap:#d95926; --body:#9085e9; --sensor:#2bb3c0;
+    --act:#d1548f; --ok:#0ca30c; --warn:#fab219; --bad:#e66767; --hi:#57c7ff;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text);
+        font:14px/1.6 "Segoe UI","Microsoft YaHei",sans-serif; }
+  .wrap{ max-width:1280px; margin:0 auto; padding:18px 16px 40px; }
+  h1{ font-size:20px; margin:0 0 2px; }
+  .sub{ color:var(--muted); font-size:12.5px; margin-bottom:12px; }
+  .sub b{ color:var(--hi); font-weight:600; }
+  .mono{ font-family:Consolas,"Courier New",monospace; }
+
+  /* ---- 流水线条 ---- */
+  .pipe{ display:flex; flex-wrap:wrap; align-items:stretch; gap:6px; margin-bottom:14px; }
+  .pipe .cell{ flex:1 1 140px; min-width:130px; background:var(--surface); border:1px solid var(--line);
+    border-radius:10px; padding:8px 10px; }
+  .pipe .cell .t{ font-size:12.5px; font-weight:600; }
+  .pipe .cell .t i{ font-style:normal; margin-right:6px; }
+  .pipe .cell .d{ color:var(--muted); font-size:11px; }
+  .pipe .arr{ align-self:center; color:var(--muted); }
+
+  .cols{ display:grid; grid-template-columns:minmax(0,1fr) 350px; gap:12px; }
+  @media (max-width:1050px){ .cols{ grid-template-columns:1fr; } }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:12px;
+         padding:12px 14px; margin-bottom:12px; }
+  .card h3{ margin:0 0 8px; font-size:13.5px; font-weight:600; color:var(--text); }
+  .card h3 .n{ color:var(--muted); font-weight:400; font-size:11.5px; }
+
+  /* ---- 工具栏 ---- */
+  .toolbar{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px; }
+  .chip{ background:var(--surface2); color:var(--text); border:1px solid var(--line);
+    padding:5px 10px; border-radius:8px; cursor:pointer; font-size:12px; }
+  .chip:hover{ border-color:var(--hi); }
+  .chip.active{ border-color:var(--hi); background:#10222e; }
+  .chip .v{ margin-left:5px; }
+  .toggle{ margin-left:auto; display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .toggle button{ background:var(--surface2); color:var(--muted); border:none; padding:5px 14px;
+    cursor:pointer; font-size:12px; }
+  .toggle button.active{ background:#10222e; color:var(--hi); font-weight:600; }
+  .toggle button.fault-on.active{ background:#2b1414; color:var(--bad); }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:10px; font-size:11.5px; color:var(--muted); margin-bottom:6px; }
+  .legend i{ display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:4px; vertical-align:-1px; }
+
+  .graph-wrap{ overflow-x:auto; }
+  svg.graph{ display:block; min-width:1760px; }
+  .node{ cursor:pointer; }
+  .node text{ pointer-events:none; user-select:none; }
+  .node:hover rect.b{ stroke-width:1.6; }
+  .node.dim, .edge.dim{ opacity:0.18; }
+  .edge{ fill:none; stroke:#2e3138; stroke-width:1.5; }
+  .edge.hl{ stroke:var(--hi); stroke-width:2; }
+  .edge.faulty{ stroke:var(--bad); stroke-width:2; }
+
+  /* ---- 详情面板 ---- */
+  .detail-head{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .detail-head .nm{ font-size:14px; font-weight:600; }
+  .detail-head .id{ color:var(--muted); font-size:11px; }
+  .badge{ font-size:11.5px; padding:2px 9px; border-radius:20px; border:1px solid currentColor; }
+  .proof{ margin:8px 0 0; padding:0; list-style:none; font-size:12.5px; color:var(--text); }
+  .proof li{ padding:1px 0; }
+  .proof li .muted{ color:var(--muted); }
+  .interc{ margin-top:8px; border-top:1px dashed var(--line); padding-top:6px; }
+  .interc .none{ color:var(--ok); font-size:12.5px; }
+  .interc .item{ margin:6px 0; }
+  .interc .kind{ display:inline-block; font-size:10.5px; border:1px solid var(--warn); color:var(--warn);
+    border-radius:4px; padding:0 5px; margin-right:6px; }
+  .interc .reason{ color:var(--muted); font-size:12px; }
+  .interc .rw{ font-size:12.5px; margin-top:1px; }
+  .interc .rw b{ color:var(--warn); font-weight:600; }
+
+  /* ---- 侧栏 ---- */
+  .stat-row{ display:flex; gap:8px; }
+  .stat{ flex:1; background:var(--surface2); border:1px solid var(--line); border-radius:10px;
+         padding:8px 10px; }
+  .stat .big{ font-size:17px; font-weight:700; }
+  .stat .lbl{ color:var(--muted); font-size:11px; }
+  .ok{ color:var(--ok); } .warn{ color:var(--warn); } .bad{ color:var(--bad); }
+
+  details.rule{ margin-bottom:6px; }
+  details.rule summary{ cursor:pointer; font-size:12.5px; color:var(--text); }
+  details.rule summary .cnt{ color:var(--hi); margin-left:6px; font-size:11px; }
+  details.rule summary .dsc{ color:var(--muted); font-size:11.5px; margin-left:6px; }
+  details.rule ul{ margin:4px 0 0; padding-left:16px; color:var(--muted); font-size:11.5px; }
+  details.rule li{ padding:0; }
+  .wb{ margin-top:6px; font-size:12px; color:var(--text); }
+  .wb b{ color:var(--hi); }
+
+  .fault-flow{ font-size:12.5px; }
+  .fault-flow .row{ margin:4px 0; }
+  .fault-flow .node-badge{ display:inline-block; border:1px solid var(--bad); color:var(--bad);
+    border-radius:5px; padding:0 6px; font-size:11.5px; }
+  .fault-flow .cap-badge{ display:inline-block; border:1px solid var(--cap); color:var(--cap);
+    border-radius:5px; padding:0 6px; font-size:11.5px; }
+  .fault-flow .arrow{ color:var(--muted); margin:0 4px; }
+
+  .pre{ background:var(--surface2); border:1px solid var(--line); border-radius:8px;
+        padding:8px 10px; overflow-x:auto; margin:0; }
+  .pre code{ font-size:11px; color:var(--sensor); }
+
+  .foot{ color:var(--muted); font-size:11px; margin-top:10px; }
+  .foot .mono{ font-size:10.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>具身本体论引擎 · 可视化报告</h1>
+  <div class="sub">T170C 轮式人形机器人 · <b>LinkML</b> 定义 Schema · <b>SHACL</b> 校验 · <b>JSON-LD</b> 交换 · 图存储 · 规则引擎 · 时序库（数据由引擎实时计算）</div>
+
+  <div class="pipe" id="pipe"></div>
+
+  <div class="cols">
+    <section>
+      <div class="card">
+        <h3>本体图 <span class="n">点击任务节点查看推理链 · 切换正常/故障状态对比</span></h3>
+        <div class="toolbar" id="toolbar"></div>
+        <div class="legend" id="legend"></div>
+        <div class="graph-wrap">
+          <svg class="graph" id="graph"></svg>
+        </div>
+      </div>
+      <div class="card" id="detail"></div>
+    </section>
+    <aside id="side"></aside>
+  </div>
+
+  <div class="foot">
+    数据与推理结果来自 <span class="mono">examples/t170c.json</span> + <span class="mono">schema/embodied_ontology.yaml</span>，
+    由 <span class="mono">report.py</span> 跑通全链路后嵌入本页。
+  </div>
+</div>
+
+<script>
+const DATA = __DATA_JSON__;
+
+/* ---------- 常量与状态 ---------- */
+const COLUMNS = ["Task","Capability","BodyPart","Object","Constraint",
+                 "Robot","Site","FaultMode","FaultEvent","ActionLog","TelemetryMetric"];
+/* 颜色：推理主轴 5 类用已校验的 categorical 集（node-graph 沿用）；
+   台账/事件类用中性色 + 状态色（节点始终带文字标签，身份不靠颜色单独表达） */
+const TCOLOR = {Task:"#d1548f", Capability:"#d95926", BodyPart:"#9085e9",
+                Object:"#3987e5", Constraint:"#199e70",
+                Robot:"#57c7ff", Site:"#6b7280", FaultMode:"#e66767",
+                FaultEvent:"#fab219", ActionLog:"#2bb3c0", TelemetryMetric:"#6b7280"};
+const TLABEL = {Task:"任务", Capability:"能力", BodyPart:"身体部件", Object:"物体",
+                Constraint:"约束", Robot:"机器人", Site:"场地", FaultMode:"故障模式",
+                FaultEvent:"故障事件", ActionLog:"动作日志", TelemetryMetric:"测点定义"};
+const VERDICT = {
+  feasible:    {icon:"✓", text:"可实现", color:"#0ca30c"},
+  constrained: {icon:"⚠", text:"受约束", color:"#fab219"},
+  infeasible:  {icon:"✗", text:"不可达", color:"#e66767"},
+};
+const NODE_W = 140, NODE_H = 34;
+let mode = "normal";
+let selected = "eo:carry_cup";
+
+/* ---------- 布局 ---------- */
+function layout() {
+  const byCol = COLUMNS.map(c => DATA.nodes.filter(n => n.type === c)
+                     .sort((a,b) => a.id.localeCompare(b.id)));
+  const maxN = Math.max(...byCol.map(a => a.length));
+  const step = NODE_H + 22;
+  const H = Math.max(660, maxN * step + 90);
+  const pos = {};
+  byCol.forEach((arr, ci) => {
+    const x = 15 + ci * 162;
+    const y0 = (H - arr.length * step) / 2;
+    arr.forEach((n, j) => { pos[n.id] = {x, y: y0 + j * step + 24}; });
+  });
+  return {pos, H, W: 15 + COLUMNS.length * 162 - 14};
+}
+
+/* ---------- 高亮集合：任务的依赖子图 ---------- */
+function subgraph(taskId) {
+  const keep = new Set([taskId]);
+  const keepEdge = new Set();
+  const task = DATA.tasks[taskId];
+  if (!task) return {keep, keepEdge};
+  DATA.edges.forEach(e => {
+    if (e.src === taskId && e.type === "requires_capability") {
+      keep.add(e.dst); keepEdge.add(e);
+      DATA.edges.forEach(e2 => {           // 能力 ← 身体部件
+        if (e2.dst === e.dst && e2.type === "provides_capability") {
+          keep.add(e2.src); keepEdge.add(e2);
+          DATA.edges.forEach(e3 => {       // 部件 ← 约束 / 事件
+            if ((e3.type === "constrains" || e3.type === "affects_bodypart") && e3.dst === e2.src) {
+              keep.add(e3.src); keepEdge.add(e3);
+            }
+            if (e3.type === "part_of" && (e3.src === e2.src || e3.dst === e2.src)) {
+              keep.add(e3.src); keep.add(e3.dst); keepEdge.add(e3);
+            }
+          });
+        }
+      });
+    }
+    if (e.src === taskId && e.type === "involves_object") {
+      keep.add(e.dst); keepEdge.add(e);
+    }
+    if (e.src === taskId && e.type === "assigned_to") {
+      keep.add(e.dst); keepEdge.add(e);
+    }
+  });
+  return {keep, keepEdge};
+}
+
+/* ---------- 渲染图 ---------- */
+function edgePath(a, b) {
+  const x1 = a.x + NODE_W, y1 = a.y + NODE_H / 2;
+  const x2 = b.x, y2 = b.y + NODE_H / 2;
+  if (Math.abs(a.x - b.x) < 2) {
+    const dx = 46;
+    return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x1 + dx} ${y2}, ${x2} ${y2}`;
+  }
+  const mid = (x1 + x2) / 2;
+  return `M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`;
+}
+
+function renderGraph() {
+  const {pos, H, W} = layout();
+  const svg = document.getElementById("graph");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const sg = subgraph(selected);
+  let s = "";
+
+  DATA.edges.forEach(e => {
+    const a = pos[e.src], b = pos[e.dst];
+    if (!a || !b) return;
+    const faulty = (mode === "fault" && e.src === "eo:six_axis_force");
+    const cls = faulty ? "edge faulty" :
+                (sg.keepEdge.has(e) ? "edge hl" : "edge dim");
+    s += `<path class="${cls}" d="${edgePath(a, b)}"></path>`;
+  });
+
+  DATA.nodes.forEach(n => {
+    const p = pos[n.id];
+    if (!p) return;
+    const c = TCOLOR[n.type];
+    const faulty = (mode === "fault" && n.id === "eo:six_axis_force");
+    const dim = sg.keep.has(n.id) ? "" : " dim";
+    const stroke = faulty ? "#e66767" : c;
+    const label = (n.label || n.id).slice(0, 8);
+    const sid = n.id.length > 22 ? n.id.slice(0, 21) + "…" : n.id;
+    s += `<g class="node${dim}" data-id="${n.id}" onclick="select('${n.id}')">`
+       + `<rect class="b" x="${p.x}" y="${p.y}" width="${NODE_W}" height="${NODE_H}" rx="8" `
+       + `fill="#141519" stroke="${stroke}" stroke-width="${faulty ? 1.8 : 1}" stroke-opacity="${faulty ? 1 : 0.55}"></rect>`
+       + `<rect x="${p.x}" y="${p.y}" width="4" height="${NODE_H}" rx="2" fill="${stroke}"></rect>`
+       + `<text x="${p.x + 12}" y="${p.y + 15}" fill="#e8e8e6" font-size="12.5">${label}</text>`
+       + `<text x="${p.x + 12}" y="${p.y + 27}" fill="#8a8d96" font-size="10" class="mono">${sid}</text>`
+       + (n.type === "FaultEvent" || faulty ? `<text x="${p.x + NODE_W - 12}" y="${p.y + 15}" fill="#e66767" font-size="12" text-anchor="end">⚠</text>` : "")
+       + `<title>${n.label || n.id} (${n.id}) · ${TLABEL[n.type]}</title>`
+       + `</g>`;
+  });
+  svg.innerHTML = s;
+}
+
+/* ---------- 渲染工具栏 ---------- */
+function renderToolbar() {
+  const tb = document.getElementById("toolbar");
+  let s = "";
+  Object.keys(DATA.tasks).forEach(tid => {
+    const t = DATA.tasks[tid];
+    const v = VERDICT[t[mode].verdict];
+    s += `<button class="chip${tid === selected ? " active" : ""}" onclick="select('${tid}')">`
+       + `${t.label}<span class="v" style="color:${v.color}">${v.icon} ${v.text}</span></button>`;
+  });
+  s += `<span class="toggle">`
+     + `<button class="${mode === "normal" ? "active" : ""}" onclick="setMode('normal')">正常</button>`
+     + `<button class="fault-on ${mode === "fault" ? "active" : ""}" onclick="setMode('fault')">注入故障</button>`
+     + `</span>`;
+  tb.innerHTML = s;
+
+  const lg = document.getElementById("legend");
+  let l = "";
+  COLUMNS.forEach(c => {
+    l += `<span><i style="background:${TCOLOR[c]}"></i>${TLABEL[c]}</span>`;
+  });
+  l += `<span style="margin-left:6px"><i style="background:#0ca30c"></i>✓ 可实现</span>`
+     + `<span><i style="background:#fab219"></i>⚠ 受约束</span>`
+     + `<span><i style="background:#e66767"></i>✗ 不可达</span>`;
+  lg.innerHTML = l;
+}
+
+/* ---------- 详情面板 ---------- */
+function renderDetail() {
+  const d = document.getElementById("detail");
+  const t = DATA.tasks[selected];
+  if (!t) {
+    const n = DATA.nodes.find(x => x.id === selected);
+    if (n) {
+      d.innerHTML = `<div class="detail-head"><span class="nm">${n.label || n.id}</span>`
+        + `<span class="id mono">${n.id}</span>`
+        + `<span class="badge" style="color:${TCOLOR[n.type]}">${TLABEL[n.type]}</span></div>`
+        + `<ul class="proof"><li class="muted">实体信息已入图与 JSON-LD；点击「任务」节点查看推理链。</li></ul>`;
+    } else {
+      d.innerHTML = "";
+    }
+    return;
+  }
+  const st = t[mode];
+  const v = VERDICT[st.verdict];
+  let s = `<div class="detail-head"><span class="nm">${t.label}</span>`
+        + `<span class="id mono">${selected}</span>`
+        + (t.robot ? `<span class="id mono">指派 → ${t.robot}</span>` : "")
+        + `<span class="badge" style="color:${v.color}">${v.icon} ${v.text}</span></div>`;
+  s += `<ul class="proof">`;
+  st.proof.forEach(line => {
+    s += `<li>${line.replace(/([✗✓⚠])/g, '<span class="muted">$1</span>')}</li>`;
+  });
+  s += `</ul><div class="interc">`;
+  if (!t.interceptions.length) {
+    s += `<div class="none">✓ 无拦截，放行执行</div>`;
+  } else {
+    t.interceptions.forEach(h => {
+      s += `<div class="item"><span class="kind">${h.kind}</span>`
+         + `<span class="reason">${h.reason}</span>`
+         + `<div class="rw"><b>→ 改写：</b>${h.rewrite}</div></div>`;
+    });
+  }
+  s += `</div>`;
+  d.innerHTML = s;
+}
+
+function select(id) {
+  if (!DATA.nodes.some(n => n.id === id)) return;
+  selected = id;
+  renderToolbar(); renderGraph(); renderDetail();
+}
+function setMode(m) {
+  mode = m;
+  renderToolbar(); renderGraph(); renderDetail();
+}
+
+/* ---------- 侧栏 ---------- */
+function renderSide() {
+  const S = DATA.stats, F = DATA.fault, T = DATA.telemetry;
+  let s = "";
+
+  // SHACL
+  s += `<div class="card"><h3>SHACL 实例校验 <span class="n">形状由 LinkML Schema 自动生成（closed）</span></h3>`
+     + `<div class="stat-row">`
+     + `<div class="stat"><div class="big ok">✓ ${S.nodes - 1} 实例</div><div class="lbl">全部符合 Schema</div></div>`
+     + `<div class="stat"><div class="big bad">✗ 拦截</div><div class="lbl">负例：重量 -1.0 / 枚举越界</div></div>`
+     + `</div></div>`;
+
+  // 规则引擎
+  s += `<div class="card"><h3>规则引擎 <span class="n">正向链 · 逐规则增量（${S.rules} 规则 / ${S.facts} 事实）</span></h3>`;
+  DATA.rules.forEach(r => {
+    s += `<details class="rule"${DATA.rules.indexOf(r) === 0 ? " open" : ""}>`
+       + `<summary><span class="mono">${r.name}</span><span class="dsc">${r.desc}</span>`
+       + `<span class="cnt">+${r.facts.length}</span></summary><ul>`;
+    r.facts.forEach(f => { s += `<li class="mono">${f[0]} --${f[1]}--> ${f[2]}</li>`; });
+    s += `</ul></details>`;
+  });
+  if (DATA.writeback.length) {
+    DATA.writeback.forEach(f => {
+      s += `<div class="wb">↻ 滑移写回后新增：<b class="mono">${f[0]} --${f[1]}--> ${f[2]}</b></div>`;
+    });
+  }
+  s += `</div>`;
+
+  // 故障传播
+  s += `<div class="card"><h3>故障传播 <span class="n">模式库驱动：${F.mode_label}</span></h3><div class="fault-flow">`
+     + `<div class="row"><span class="node-badge">⚠ ${F.event}</span><span class="arrow">→ of_mode →</span>`
+     + `<span class="node-badge">${F.mode}</span></div>`
+     + `<div class="row"><span class="arrow">→ 失效能力</span><span class="cap-badge">力控</span>`
+     + `<span class="arrow">→</span>受影响任务：`
+     + F.affected.map(tid => {
+         const lb = DATA.tasks[tid] ? DATA.tasks[tid].label : tid;
+         return `<span class="bad">✗ ${lb}</span>`;
+       }).join("　")
+     + `</div>`
+     + `<div class="row"><span class="ok">✓ 端杯子不受影响</span>（走包握链路，依赖隔离）</div>`
+     + `<div class="row" style="border-top:1px dashed var(--line);padding-top:5px">反向根因：抓鸡蛋失败 → 依赖链回溯 → <span class="node-badge">${F.part}</span></div>`
+     + `</div></div>`;
+
+  // 时序
+  const pts = T.points;
+  const xs = i => 34 + i * 72, ys = v => 88 - (v / 14) * 66;
+  s += `<div class="card"><h3>时序库 <span class="n">entity_ref 外键关联本体实体 · TimescaleDB 生产</span></h3>`
+     + `<svg viewBox="0 0 300 108" style="width:100%;display:block">`
+     + `<line x1="30" y1="88" x2="290" y2="88" stroke="#26282e" stroke-width="1"></line>`
+     + `<polyline fill="none" stroke="#2bb3c0" stroke-width="2" points="${pts.map((p,i)=>`${xs(i)},${ys(p.v)}`).join(" ")}"></polyline>`;
+  pts.forEach((p, i) => {
+    s += `<circle cx="${xs(i)}" cy="${ys(p.v)}" r="4" fill="#2bb3c0">`
+       + `<title>${p.t} · force_reading = ${p.v} N</title></circle>`
+       + `<text x="${xs(i)}" y="102" fill="#8a8d96" font-size="8.5" text-anchor="middle">${p.t.slice(3)}</text>`;
+  });
+  s += `<text x="${xs(3) - 16}" y="${ys(pts[3].v) - 12}" fill="#fab219" font-size="11">⚠ 骤降 ${T.drop_pct}%</text>`
+     + `</svg>`
+     + `<div class="wb" style="margin-top:4px">滑移检测 → 写回 <b>eo:cup.surface = slippery</b> → 规则重跑 → 抓握力度 ×1.5</div>`
+     + `</div>`;
+
+  // JSON-LD
+  s += `<div class="card"><h3>JSON-LD 交换 <span class="n">${S.jsonld} 节点 · round-trip 无损</span></h3>`
+     + `<pre class="pre"><code>${JSON.stringify(DATA.jsonld.cup, null, 2).replace(/</g, "&lt;")}</code></pre>`
+     + `<div class="wb" style="margin-top:6px">@context 由 LinkML Schema 自动推导（Link 槽 → @id）</div></div>`;
+
+  document.getElementById("side").innerHTML = s;
+}
+
+/* ---------- 流水线条 ---------- */
+function renderPipe() {
+  const S = DATA.stats;
+  const cells = [
+    ["LinkML Schema", `<i style="color:#199e70">▦</i>`, "13 ObjectType · 单一事实来源"],
+    ["SHACL 校验", `<i style="color:#0ca30c">✓</i>`, `${S.nodes - 1} 实例 · L0+L1 · 负例拦截`],
+    ["图存储", `<i style="color:#d95926">⛓</i>`, `${S.robots} 机器人 · ${S.nodes} 节点 / ${S.edges} 边`],
+    ["规则引擎", `<i style="color:#d1548f">⚙</i>`, `${S.rules} 规则 · ${S.facts} 事实（L2）`],
+    ["时序库", `<i style="color:#2bb3c0">〰</i>`, "外键关联实体 · 滑移写回"],
+    ["JSON-LD", `<i style="color:#57c7ff">{ }</i>`, `${S.jsonld} 节点 · 双向 round-trip`],
+  ];
+  document.getElementById("pipe").innerHTML = cells.map((c, i) =>
+    `<div class="cell"><div class="t">${c[1]}${c[0]}</div><div class="d">${c[2]}</div></div>`
+    + (i < cells.length - 1 ? `<span class="arr">→</span>` : "")
+  ).join("");
+}
+
+renderPipe();
+renderToolbar();
+renderGraph();
+renderDetail();
+renderSide();
+</script>
+</body>
+</html>

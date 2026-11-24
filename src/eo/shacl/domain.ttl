@@ -1,0 +1,37 @@
+# 具身本体论 · L1 领域形状（手写部分）
+# 框架规范见 docs/03-shacl-framework.md §3.2、§5。
+# 扩展方式：在文件末尾追加 NodeShape，重跑全量校验即可。
+# 注意：本工程用 pyshacl 0.40，SPARQL 约束为 sh:select 形式
+#       （SELECT 每返回一行 = 一条违规；$this 由校验器预绑定为焦点节点）。
+
+@prefix eo:  <https://ontology.huilun.cn/embodied/> .
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ---- 模式 C · 能力必须有提供者 ----
+eo:CapabilityHasProviderShape a sh:NodeShape ;
+  sh:targetClass eo:Capability ;
+  sh:sparql [ a sh:SPARQLConstraint ;
+    sh:message "能力 {$this} 没有任何部件提供（provides_capability 缺失）" ;
+    sh:prefixes eo: ;
+    sh:select """SELECT $this WHERE { FILTER NOT EXISTS { ?p eo:provides_capability $this } }""" ] .
+
+# ---- 模式 C · 测点值必须命中测点注册表 ----
+eo:MetricRegisteredShape a sh:NodeShape ;
+  sh:targetClass eo:TelemetryPoint ;
+  sh:sparql [ a sh:SPARQLConstraint ;
+    sh:message "测点 {$this} 的 metric_code 未在 TelemetryMetric 注册表中注册" ;
+    sh:prefixes eo: ;
+    sh:select """SELECT $this WHERE { $this eo:metric_code ?c .
+      FILTER NOT EXISTS { ?m a eo:TelemetryMetric ; eo:metric_code ?c } }""" ] .
+
+# ---- 模式 C · 故障事件影响的部件必须属于上报机器人 ----
+eo:FaultPartBelongsToReporterShape a sh:NodeShape ;
+  sh:targetClass eo:FaultEvent ;
+  sh:sparql [ a sh:SPARQLConstraint ;
+    sh:message "故障事件 {$this} 影响的部件不属于上报机器人" ;
+    sh:prefixes eo: ;
+    sh:select """SELECT $this WHERE {
+      $this eo:affects_bodypart ?p ; eo:reported_by ?r .
+      FILTER NOT EXISTS { ?r eo:has_part ?root . ?p eo:part_of* ?root }
+    }""" ] .

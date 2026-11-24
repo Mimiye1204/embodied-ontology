@@ -1,0 +1,151 @@
+{
+  "@context": {
+    "eo": "https://ontology.huilun.cn/embodied/",
+    "linkml": "https://w3id.org/linkml/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "@vocab": "https://ontology.huilun.cn/embodied/",
+    "id": "@id",
+    "type": "@type",
+    "action_type": "eo:action_type",
+    "actor": "eo:actor",
+    "affects_bodypart": {
+      "@id": "eo:affects_bodypart",
+      "@type": "@id"
+    },
+    "affects_capability": {
+      "@id": "eo:affects_capability",
+      "@type": "@id"
+    },
+    "assigned_to": {
+      "@id": "eo:assigned_to",
+      "@type": "@id"
+    },
+    "at_site": {
+      "@id": "eo:at_site",
+      "@type": "@id"
+    },
+    "code": "eo:code",
+    "constrains": {
+      "@id": "eo:constrains",
+      "@type": "@id"
+    },
+    "constraint_type": "eo:constraint_type",
+    "created_at": {
+      "@id": "eo:created_at",
+      "@type": "xsd:dateTime"
+    },
+    "deadline": {
+      "@id": "eo:deadline",
+      "@type": "xsd:dateTime"
+    },
+    "default_severity": "eo:default_severity",
+    "deprecated": "eo:deprecated",
+    "description": "eo:description",
+    "detail": "eo:detail",
+    "detected_at": {
+      "@id": "eo:detected_at",
+      "@type": "xsd:dateTime"
+    },
+    "dof": "eo:dof",
+    "entity_ref": {
+      "@id": "eo:entity_ref",
+      "@type": "@id"
+    },
+    "expression": "eo:expression",
+    "firmware_version": "eo:firmware_version",
+    "grip_force_n": "eo:grip_force_n",
+    "has_handle": "eo:has_handle",
+    "has_part": {
+      "@id": "eo:has_part",
+      "@type": "@id"
+    },
+    "has_thread": "eo:has_thread",
+    "health": "eo:health",
+    "involves_object": {
+      "@id": "eo:involves_object",
+      "@type": "@id"
+    },
+    "is_container": "eo:is_container",
+    "is_fragile": "eo:is_fragile",
+    "label": "eo:label",
+    "load_capacity_kg": "eo:load_capacity_kg",
+    "located_at": {
+      "@id": "eo:located_at",
+      "@type": "@id"
+    },
+    "max_speed_ms": "eo:max_speed_ms",
+    "max_value": "eo:max_value",
+    "measures": {
+      "@id": "eo:measures",
+      "@type": "@id"
+    },
+    "metric_code": "eo:metric_code",
+    "min_value": "eo:min_value",
+    "mode_code": "eo:mode_code",
+    "model": "eo:model",
+    "object_code": "eo:object_code",
+    "occurred_at": {
+      "@id": "eo:occurred_at",
+      "@type": "xsd:dateTime"
+    },
+    "of_mode": {
+      "@id": "eo:of_mode",
+      "@type": "@id"
+    },
+    "parent": {
+      "@id": "eo:parent",
+      "@type": "@id"
+    },
+    "part_of": {
+      "@id": "eo:part_of",
+      "@type": "@id"
+    },
+    "payload_kg": "eo:payload_kg",
+    "priority": "eo:priority",
+    "provides_capability": {
+      "@id": "eo:provides_capability",
+      "@type": "@id"
+    },
+    "reported_by": {
+      "@id": "eo:reported_by",
+      "@type": "@id"
+    },
+    "requires_capability": {
+      "@id": "eo:requires_capability",
+      "@type": "@id"
+    },
+    "resolved_at": {
+      "@id": "eo:resolved_at",
+      "@type": "xsd:dateTime"
+    },
+    "result": "eo:result",
+    "retention_days": "eo:retention_days",
+    "sampling_hz": "eo:sampling_hz",
+    "serial": "eo:serial",
+    "severity": "eo:severity",
+    "status": "eo:status",
+    "suggested_rewrite": "eo:suggested_rewrite",
+    "surface": "eo:surface",
+    "target": {
+      "@id": "eo:target",
+      "@type": "@id"
+    },
+    "threshold": "eo:threshold",
+    "time": {
+      "@id": "eo:time",
+      "@type": "xsd:dateTime"
+    },
+    "torque_limit_nm": "eo:torque_limit_nm",
+    "unit": "eo:unit",
+    "updated_at": {
+      "@id": "eo:updated_at",
+      "@type": "xsd:dateTime"
+    },
+    "value": "eo:value",
+    "value_type": "eo:value_type",
+    "verdict": "eo:verdict",
+    "version": "eo:version",
+    "weight_kg": "eo:weight_kg"
+  }
+}

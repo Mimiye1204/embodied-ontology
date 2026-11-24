@@ -1,0 +1,613 @@
+id: https://ontology.huilun.cn/embodied
+name: EmbodiedOntology
+title: 慧仑具身本体论 Schema
+description: >-
+  具身本体论生产 Schema v1.0.0 —— 面向多机器人编队的调度与执行闭环。
+  覆盖：机器人/场地台账、身体部件树、能力注册、任务生命周期、环境物体、
+  约束库、故障模式库（故障传播依据）、故障事件、动作审计（写回）、
+  测点注册表（时序库外键约束来源）与测点值（交换窗口用）。
+  三份配套规范：docs/01-linkml-schema-design.md（本 Schema 设计说明）、
+  docs/02-neo4j-mapping-spec.md（节点-边映射规范）、
+  docs/03-shacl-framework.md（SHACL 校验规则框架）。
+license: MIT
+version: 1.0.0
+prefixes:
+  eo: https://ontology.huilun.cn/embodied/
+  linkml: https://w3id.org/linkml/
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  xsd: http://www.w3.org/2001/XMLSchema#
+default_prefix: eo
+default_range: string
+
+imports:
+  - linkml:types
+
+# ---------------------------------------------------------------------------
+# 标量类型（带单位与数值域）
+# ---------------------------------------------------------------------------
+types:
+  count:
+    typeof: integer
+    minimum_value: 0
+    description: 数量（自由度等）
+  mass_kg:
+    typeof: float
+    minimum_value: 0
+    description: 质量，单位 kg
+  torque_nm:
+    typeof: float
+    minimum_value: 0
+    description: 力矩，单位 N·m
+  force_n:
+    typeof: float
+    minimum_value: 0
+    description: 力，单位 N
+  speed_ms:
+    typeof: float
+    minimum_value: 0
+    description: 速度，单位 m/s
+  percent:
+    typeof: float
+    minimum_value: 0
+    maximum_value: 100
+    description: 百分比 0-100
+  sampling_hz:
+    typeof: float
+    minimum_value: 0
+    description: 采样频率，单位 Hz
+  retention_days:
+    typeof: integer
+    minimum_value: 1
+    description: 数据保留天数
+  timestamp:
+    typeof: datetime
+    description: 时间戳（ISO-8601）
+
+# ---------------------------------------------------------------------------
+# 枚举
+# ---------------------------------------------------------------------------
+enums:
+  RobotStatus:
+    description: 机器人状态
+    permissible_values:
+      online:
+        description: 在线
+      offline:
+        description: 离线
+      maintenance:
+        description: 维护中
+      decommissioned:
+        description: 退役
+  TaskStatus:
+    description: 任务生命周期状态
+    permissible_values:
+      pending:
+        description: 待下发
+      dispatched:
+        description: 已下发
+      executing:
+        description: 执行中
+      succeeded:
+        description: 成功
+      failed:
+        description: 失败
+      canceled:
+        description: 已取消
+      intercepted:
+        description: 被拦截（约束改写中）
+  HealthStatus:
+    description: 部件健康状态
+    permissible_values:
+      ok:
+        description: 正常
+      degraded:
+        description: 降级（可用但性能受限）
+      fault:
+        description: 故障（不可用）
+  SurfaceType:
+    description: 物体表面状态
+    permissible_values:
+      dry:
+        description: 干燥
+      slippery:
+        description: 湿滑
+      rough:
+        description: 粗糙
+  ConstraintType:
+    description: 约束类型（动作拦截的检查维度）
+    permissible_values:
+      torque:
+        description: 力矩
+      load:
+        description: 负载
+      pose:
+        description: 位形
+      gripper:
+        description: 抓握
+      speed:
+        description: 速度
+      workspace:
+        description: 工作空间
+  Severity:
+    description: 严重程度
+    permissible_values:
+      info:
+        description: 信息
+      warning:
+        description: 警告
+      critical:
+        description: 严重
+  FaultStatus:
+    description: 故障事件生命周期
+    permissible_values:
+      active:
+        description: 活跃（未处理）
+      acknowledged:
+        description: 已确认
+      resolved:
+        description: 已解决
+  MetricValueType:
+    description: 测点值类型（决定 TimescaleDB 列语义）
+    permissible_values:
+      float:
+        description: 浮点
+      int:
+        description: 整数
+      bool:
+        description: 布尔
+  VerdictType:
+    description: 任务可达性结论（规则引擎计算写回）
+    permissible_values:
+      feasible:
+        description: 可实现
+      constrained:
+        description: 受约束（需改写）
+      infeasible:
+        description: 不可实现
+      rewrite:
+        description: 改写任务意义
+
+# ---------------------------------------------------------------------------
+# 类（ObjectType）
+# ---------------------------------------------------------------------------
+classes:
+  Entity:
+    description: 所有本体实体的抽象基类（不进库；提供公共身份与溯源字段）
+    abstract: true
+    slots:
+      - id
+      - label
+      - description
+      - deprecated
+      - created_at
+      - updated_at
+      - version
+
+  Site:
+    description: 场地（多场地调度）
+    is_a: Entity
+    unique_keys:
+      site_code_key:
+        unique_key_name: site_code_key
+        unique_key_slots:
+          - code
+    slots:
+      - code
+      - parent
+
+  Robot:
+    description: 机器人台账（编队成员）
+    is_a: Entity
+    unique_keys:
+      robot_serial_key:
+        unique_key_name: robot_serial_key
+        unique_key_slots:
+          - serial
+    slots:
+      - serial
+      - model
+      - status
+      - firmware_version
+      - located_at
+      - has_part
+    slot_usage:
+      status:
+        range: RobotStatus
+
+  BodyPart:
+    description: 身体部件（构成部件树；能力与健康状态的载体）
+    is_a: Entity
+    slots:
+      - part_of
+      - dof
+      - health
+      - load_capacity_kg
+      - torque_limit_nm
+      - grip_force_n
+      - max_speed_ms
+      - provides_capability
+
+  Capability:
+    description: 能力注册（能力 → 提供部件的反向通过 provides_capability 遍历）
+    is_a: Entity
+    unique_keys:
+      capability_code_key:
+        unique_key_name: capability_code_key
+        unique_key_slots:
+          - code
+    slots:
+      - code
+      - payload_kg
+
+  Object:
+    description: 环境物体（affordance 属性驱动的接地规则）
+    is_a: Entity
+    unique_keys:
+      object_code_key:
+        unique_key_name: object_code_key
+        unique_key_slots:
+          - object_code
+    slots:
+      - object_code
+      - has_handle
+      - weight_kg
+      - surface
+      - is_fragile
+      - has_thread
+      - is_container
+
+  Task:
+    description: 任务（生命周期 + 能力需求 + 指派；verdict 为规则引擎写回缓存）
+    is_a: Entity
+    slots:
+      - status
+      - priority
+      - deadline
+      - verdict
+      - requires_capability
+      - involves_object
+      - assigned_to
+      - at_site
+
+  Constraint:
+    description: 约束库（动作拦截的检查依据；expression 为可读公式，suggested_rewrite 为改写建议）
+    is_a: Entity
+    slots:
+      - constraint_type
+      - expression
+      - threshold
+      - unit
+      - suggested_rewrite
+      - constrains
+
+  FaultMode:
+    description: 故障模式库（预定义的故障传播依据：模式 → 受影响部件/能力）
+    is_a: Entity
+    unique_keys:
+      faultmode_code_key:
+        unique_key_name: faultmode_code_key
+        unique_key_slots:
+          - mode_code
+    slots:
+      - mode_code
+      - affects_bodypart
+      - affects_capability
+      - default_severity
+
+  FaultEvent:
+    description: 故障事件（动态侧；经 of_mode 关联模式库做传播，或直接 affects_bodypart）
+    is_a: Entity
+    slots:
+      - of_mode
+      - affects_bodypart
+      - severity
+      - status
+      - detected_at
+      - resolved_at
+      - reported_by
+    slot_usage:
+      status:
+        range: FaultStatus
+
+  ActionLog:
+    description: 动作审计（Palantir ActionType 写回思想的落地：谁、对谁、做了什么、结果）
+    is_a: Entity
+    slots:
+      - action_type
+      - actor
+      - target
+      - detail
+      - result
+      - occurred_at
+
+  TelemetryMetric:
+    description: 测点注册表（定义合法测点；TimescaleDB 写入的 (entity, metric) 必须在此注册）
+    is_a: Entity
+    unique_keys:
+      metric_code_key:
+        unique_key_name: metric_code_key
+        unique_key_slots:
+          - metric_code
+    slots:
+      - metric_code
+      - measures
+      - value_type
+      - unit
+      - min_value
+      - max_value
+      - sampling_hz
+      - retention_days
+
+  TelemetryPoint:
+    description: 测点值（高频数据不落图库，只进 TimescaleDB；此类仅用于小窗口的 JSON-LD 交换）
+    is_a: Entity
+    slots:
+      - entity_ref
+      - metric_code
+      - value
+      - time
+
+# ---------------------------------------------------------------------------
+# 槽（Property = 标量；Link = range 指向类）
+# ---------------------------------------------------------------------------
+slots:
+  # ---- 公共身份与溯源 ----
+  id:
+    identifier: true
+    range: uriorcurie
+    required: true
+    description: 实体唯一标识（紧凑 IRI，如 eo:robot/ti5、eo:part/ti5/arm/wrist）
+  status:
+    range: string
+    description: 状态（各使用类经 slot_usage 收紧为对应枚举）
+  label:
+    range: string
+    required: true
+    description: 人类可读名称（UI 显示）
+  description:
+    range: string
+    description: 说明
+  deprecated:
+    range: boolean
+    description: 已废弃标记（本体演进：废弃而非删除）
+  created_at:
+    range: timestamp
+    required: true
+    description: 创建时间（写入方系统时间）
+  updated_at:
+    range: timestamp
+    description: 最后更新时间（写回方维护）
+  version:
+    range: count
+    description: 实体版本号（写回递增，缺省为 1）
+
+  # ---- Site ----
+  code:
+    range: string
+    required: true
+    description: 场地编码（业务唯一键）
+  parent:
+    range: Site
+    description: 父场地（场地层级，可空）
+
+  # ---- Robot ----
+  serial:
+    range: string
+    required: true
+    description: 出厂序列号（业务唯一键，对接设备台账）
+  model:
+    range: string
+    description: 型号（如 T170C / 豹小秘2）
+  firmware_version:
+    range: string
+    description: 固件版本
+  located_at:
+    range: Site
+    description: 所在场地
+  has_part:
+    range: BodyPart
+    multivalued: true
+    description: 部件树根节点（身体部件层级入口）
+
+  # ---- BodyPart ----
+  part_of:
+    range: BodyPart
+    description: 父部件（部件树；根部件为空）
+  dof:
+    range: count
+    description: 自由度
+  health:
+    range: HealthStatus
+    description: 健康状态（故障传播/可达性判断的输入）
+  load_capacity_kg:
+    range: mass_kg
+    description: 负载能力 kg
+  torque_limit_nm:
+    range: torque_nm
+    description: 力矩上限 N·m
+  grip_force_n:
+    range: force_n
+    description: 抓握力上限 N
+  max_speed_ms:
+    range: speed_ms
+    description: 最大速度 m/s
+  provides_capability:
+    range: Capability
+    multivalued: true
+    description: 提供的能力（Link）
+
+  # ---- Capability ----
+  payload_kg:
+    range: mass_kg
+    description: 能力附带的额定负载 kg
+
+  # ---- Object ----
+  object_code:
+    range: string
+    description: 物体编码（已知物体的业务唯一键；未知物体可空）
+  has_handle:
+    range: boolean
+    description: 是否有把手（演绎：有把手 ⇒ 可抓取）
+  weight_kg:
+    range: mass_kg
+    description: 重量 kg
+  surface:
+    range: SurfaceType
+    description: 表面状态（规则：湿滑 ⇒ 抓握力 ×1.5）
+  is_fragile:
+    range: boolean
+    description: 是否易碎（演绎：易碎 ⇒ 需力控）
+  has_thread:
+    range: boolean
+    description: 是否有螺纹（演绎：螺纹 ⇒ 旋拧）
+  is_container:
+    range: boolean
+    description: 是否容器（拦截改写：容器超重可「先倒水」减负）
+
+  # ---- Task ----
+  priority:
+    range: integer
+    minimum_value: 0
+    maximum_value: 10
+    description: 优先级 0-10（越大越优先）
+  deadline:
+    range: timestamp
+    description: 截止时间
+  verdict:
+    range: VerdictType
+    description: 可达性结论（规则引擎计算写回的缓存，非人工填写）
+  requires_capability:
+    range: Capability
+    multivalued: true
+    required: true
+    description: 需要的全部能力（Link，≥1）
+  involves_object:
+    range: Object
+    description: 涉及的物体（Link，可空）
+  assigned_to:
+    range: Robot
+    description: 指派的机器人（Link，可空=未指派）
+  at_site:
+    range: Site
+    description: 目标场地（Link，可空；已指派时从机器人场地推导）
+
+  # ---- Constraint ----
+  constraint_type:
+    range: ConstraintType
+    required: true
+    description: 约束类型（拦截检查的维度）
+  expression:
+    range: string
+    required: true
+    description: 约束表达式（可读公式，如 τ = m·g·l ≤ τ_limit）
+  threshold:
+    range: float
+    description: 数值阈值（位形类约束可空）
+  unit:
+    range: string
+    description: 阈值单位
+  suggested_rewrite:
+    range: string
+    description: 建议改写（拦截命中时的改写建议，写在数据里而非代码里）
+  constrains:
+    range: Entity
+    required: true
+    description: 约束作用对象（Link：部件/能力/任务）
+
+  # ---- FaultMode ----
+  mode_code:
+    range: string
+    required: true
+    description: 故障模式编码（业务唯一键）
+  affects_bodypart:
+    range: BodyPart
+    multivalued: true
+    description: 该模式影响的部件（Link）
+  affects_capability:
+    range: Capability
+    multivalued: true
+    description: 该模式导致失效的能力（Link，传播依据）
+  default_severity:
+    range: Severity
+    description: 缺省严重度
+
+  # ---- FaultEvent ----
+  of_mode:
+    range: FaultMode
+    description: 关联的故障模式（Link；有模式时按模式库传播，否则按直接关联部件传播）
+  severity:
+    range: Severity
+    required: true
+    description: 严重度
+  detected_at:
+    range: timestamp
+    required: true
+    description: 检测时间
+  resolved_at:
+    range: timestamp
+    description: 解决时间
+  reported_by:
+    range: Robot
+    description: 上报的机器人（Link）
+
+  # ---- ActionLog ----
+  action_type:
+    range: string
+    required: true
+    description: 动作类型（task.dispatch / task.intercept / grasp.execute 等点分命名）
+  actor:
+    range: string
+    required: true
+    description: 执行主体（平台用户/Agent id）
+  target:
+    range: Entity
+    description: 作用对象（Link）
+  detail:
+    range: string
+    description: 参数细节（JSON 字符串）
+  result:
+    range: string
+    description: 结果（ok / rewritten / failed）
+  occurred_at:
+    range: timestamp
+    required: true
+    description: 发生时间
+
+  # ---- TelemetryMetric ----
+  metric_code:
+    range: string
+    required: true
+    description: 测点编码（业务唯一键，如 force_reading）
+  sampling_hz:
+    range: sampling_hz
+    description: 采样频率 Hz（0 = 事件驱动）
+  retention_days:
+    range: retention_days
+    description: 数据保留天数
+  measures:
+    range: Entity
+    description: 测点测量对象（Link：部件/机器人/任务）
+  value_type:
+    range: MetricValueType
+    required: true
+    description: 值类型（决定时序库列语义）
+  min_value:
+    range: float
+    description: 合法值下限
+  max_value:
+    range: float
+    description: 合法值上限
+
+  # ---- TelemetryPoint ----
+  entity_ref:
+    range: Entity
+    required: true
+    description: 外键 → 测点归属的实体（Link；与 metric_code 共同构成时序库联合键）
+  value:
+    range: float
+    required: true
+    description: 数值
+  time:
+    range: timestamp
+    required: true
+    description: 采样时间

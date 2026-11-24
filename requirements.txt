@@ -1,0 +1,8 @@
+# 具身本体论引擎 · Python 依赖（Python ≥ 3.11）
+# 安装：pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+linkml>=1.8          # Schema 单一事实来源（LinkML）+ SchemaView 运行时内省
+pyshacl>=0.26        # SHACL 实例校验
+rdflib>=7            # RDF 图（JSON-LD 解析 / SHACL 数据图）
+pyld>=3              # rdflib 的 JSON-LD 插件依赖
+neo4j>=5             # 图存储（生产，Neo4j driver）
+psycopg[binary]>=3.1 # 时序存储（生产，TimescaleDB/PostgreSQL）
