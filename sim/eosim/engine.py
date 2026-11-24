@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-"""仿真引擎：装配 本体图 + 时序库 + 场景，驱动仿真时钟。
+"""仿真引擎：本体 CRUD + 时序绑定 + 规则框架 + Action 注册表 + 场景时钟。
 
-写路径统一走 write()（Gate A：合并后 SHACL 校验，拒绝则不进图）——
-仿真里的每一次写回都与生产写入路径同构。
+写路径统一走 eo.crud.OntologyCRUD（Gate A）；
+调度/故障/写回统一走 eo.actions.ActionRegistry（受控动作 + 自动审计）；
+推理统一走 eo.rules.framework.RuleEngine（证明链 + 动态属性 + 动作绑定）。
 """
 from __future__ import annotations
 
@@ -10,13 +11,13 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
+from eo.actions import build_registry
 from eo.crud import OntologyCRUD, ValidationError as GateAError
-from eo.jsonld import export_jsonld, graph_to_entities
-from eo.rules import (
-    check_reachability, forward_chain, DOMAIN_RULES,
-    intercept_action, propagate_fault_event, root_cause,
-)
+from eo.jsonld import export_jsonld
+from eo.rules import DOMAIN_RULES, check_reachability, intercept_action
+from eo.rules.framework import RuleEngine
 from eo.timeseries import SqliteTelemetryStore
+from eo.timeseries.binding import BindingRegistry
 
 from .clock import iso
 from .dispatch import TaskDispatcher
@@ -37,7 +38,7 @@ class SimulationEngine:
         shutil.rmtree(outputs, ignore_errors=True)  # 每次运行清空产物
         os.makedirs(outputs, exist_ok=True)
 
-        # ---- Gate A：世界数据入库前全量校验（唯一写路径：eo.crud.OntologyCRUD） ----
+        # ---- Gate A：世界数据入库（唯一写路径 OntologyCRUD） ----
         with open(data_path, encoding="utf-8") as f:
             entities = json.load(f)
         self.crud = OntologyCRUD()
@@ -45,26 +46,49 @@ class SimulationEngine:
             self.crud.load(entities)
         except GateAError as e:
             raise ValueError(f"Gate A：世界数据未通过 SHACL 校验\n{e.report}") from e
-        self.facts, _ = forward_chain(self.store, DOMAIN_RULES)
 
         self.telemetry = SqliteTelemetryStore(os.path.join(outputs, "telemetry.db"))
         self.timeline = Timeline(outputs)
+
+        # ---- 时序属性绑定（测点注册表 binds_to 声明） ----
+        self.bindings = BindingRegistry(self.store, self.telemetry)
+        binding_errors = self.bindings.validate_bindings()
+        if binding_errors:
+            raise ValueError("时序绑定校验失败：\n" + "\n".join(binding_errors))
+
+        # ---- Action 注册表（受控写操作 + 自动审计） ----
+        self.actions = build_registry(
+            self.crud, now=lambda: iso(self.t),
+            sink=lambda source, msg: self.timeline.event(self.t, source, msg))
+
+        # ---- 规则引擎框架（证明链/动态属性/动作绑定） ----
+        self.rules = RuleEngine(self.store, bindings=self.bindings, actions=self.actions)
+        self.rules.add_rules(DOMAIN_RULES)
+
         self.runtime = RobotRuntime(self, seed)
         self.dispatcher = TaskDispatcher(self)
         self.injector = FaultInjector(self)
         self._log_seq = 0
 
+        self.rules.run()
         self.timeline.event(0, "boot", f"世界就绪：{len(entities)} 实体过 Gate A，"
-                                       f"规则引擎推出 {len(self.facts)} 条事实")
+                                       f"规则引擎推出 {len(self.rules.facts)} 条事实，"
+                                       f"时序绑定 {len(self.bindings.bindings)} 个")
 
-    # ---------------------------------------------------------------- 写路径
+    # ---------------------------------------------------------------- 访问
     @property
     def store(self):
         """本体图（由 CRUD 层持有，重建后引用不变）。"""
         return self.crud.store
 
+    @property
+    def facts(self):
+        return self.rules.fact_tuples()
+
+    # ---------------------------------------------------------------- 写路径
     def write(self, updates: List[Dict[str, Any]], t: int) -> bool:
-        """Gate A 写回（委托 OntologyCRUD.apply：浅合并 → 全量校验 → 原子提交）。"""
+        """Gate A 写回（委托 OntologyCRUD.apply；图变更后失效派生事实并重跑规则）。"""
+        before = self.crud.version
         try:
             self.crud.apply(updates)
         except GateAError as e:
@@ -72,7 +96,9 @@ class SimulationEngine:
             self.timeline.event(t, "gate-a",
                                 f"✗ 写回被拒绝：{first.focus_node} {first.message}")
             return False
-        self.facts, _ = forward_chain(self.store, DOMAIN_RULES, set())  # 事实集失效重算
+        if self.crud.version != before:
+            self.rules.invalidate_derived()
+        self.rules.run()
         return True
 
     def log_action(self, t: int, action_type: str, target: str, result: str,
@@ -116,7 +142,6 @@ class SimulationEngine:
 
     # ---------------------------------------------------------------- 便捷
     def inject_fault(self, mode_id: str, t: int):
-        """注入故障（按 FaultMode 模式库）。"""
         return self.injector.inject(mode_id, t)
 
     def reachability(self, task_id: str):
@@ -125,11 +150,6 @@ class SimulationEngine:
     def intercept(self, task_id: str):
         return intercept_action(self.store, task_id)
 
-    def propagate(self, event_id: str):
-        return propagate_fault_event(self.store, event_id)
-
     def root_cause(self, task_id: str):
+        from eo.rules.faults import root_cause
         return root_cause(self.store, task_id)
-
-    def iso(self, t: int) -> str:
-        return iso(t)

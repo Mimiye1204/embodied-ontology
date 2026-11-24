@@ -176,8 +176,44 @@ def main() -> None:
             for s, p, v in sorted(t.added):
                 print(f"      [{t.rule_name}] 新增：{s} --{p}--> {v}")
 
-    # ------------------------------------------------------------ 8. JSON-LD
-    section("[8] 交换层：JSON-LD 全域交换（导出 + 双向 round-trip）")
+    # ------------------------------------------------------------ 8. 动力层
+    section("[8] 动力层：时序属性绑定 + 规则证明链 + Action 受控动作")
+    from eo.actions import build_registry
+    from eo.crud import OntologyCRUD
+    from eo.jsonld import graph_to_entities
+    from eo.rules.framework import RuleEngine
+    from eo.timeseries.binding import BindingRegistry
+
+    # 8.1 时序属性绑定（测点注册表 binds_to 声明 → 动态属性物化）
+    bindings = BindingRegistry(store, ts)
+    berrs = bindings.validate_bindings()
+    print(f"时序绑定 {len(bindings.bindings)} 个（binds_to 声明），"
+          f"合法性校验：{'通过 ✓' if not berrs else '失败 ✗ ' + str(berrs)}")
+    print(f"  动态属性物化 eo:robot/ti5 → {bindings.snapshot('eo:robot/ti5')}")
+    print(f"  动态属性物化 eo:part/ti5/six-axis-force → "
+          f"{bindings.snapshot('eo:part/ti5/six-axis-force')}")
+
+    # 8.2 规则引擎框架：证明链（为什么推出这个结论）
+    eng = RuleEngine(store, bindings=bindings)
+    eng.add_rules(DOMAIN_RULES)
+    eng.run()
+    print("  证明链（为什么「端满水壶」力矩超限）：")
+    for line in eng.explain("eo:task/carry-kettle", "over_torque").splitlines():
+        print(f"      {line}")
+
+    # 8.3 Action 绑定模型（受控写操作：校验 + 审计）
+    crud = OntologyCRUD()
+    crud.load(graph_to_entities(store))
+    registry = build_registry(crud)
+    result = registry.execute("task.dispatch", actor="demo", task_id="eo:task/carry-cup")
+    print(f"  动作 task.dispatch（杯面已湿滑 → 应拦截）：")
+    for m in result.messages:
+        print(f"      {m}")
+    print(f"  自动审计：{result.audit_log_id}（ActionLog 实体已过 Gate A 落库）")
+    store = crud.store   # 后续交换层导出含动作产物
+
+    # ------------------------------------------------------------ 9. JSON-LD
+    section("[9] 交换层：JSON-LD 全域交换（导出 + 双向 round-trip）")
     os.makedirs(GEN, exist_ok=True)
     doc = export_jsonld(store, os.path.join(GEN, "fleet.jsonld"))
     with open(os.path.join(GEN, "context.jsonld"), "w", encoding="utf-8") as f:
@@ -193,8 +229,8 @@ def main() -> None:
     cup = next(e for e in back if e["id"] == "eo:object/cup")
     print(f"  样例（写回属性随交换格式带出）：{json.dumps(cup, ensure_ascii=False)}")
 
-    # ------------------------------------------------------------ 9. 产物清单
-    section("[9] 产物清单")
+    # ------------------------------------------------------------ 10. 产物清单
+    section("[10] 产物清单")
     for p in ["schema/embodied_ontology.yaml",
               "docs/01-linkml-schema-design.md",
               "docs/02-neo4j-mapping-spec.md",

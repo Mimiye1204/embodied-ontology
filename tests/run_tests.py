@@ -18,12 +18,15 @@ from eo.graph import MemoryStore
 from eo.graph.loader import load_entities, load_json_file
 from eo.jsonld import export_jsonld, from_jsonld_document
 from eo.crud import CRUDError, OntologyCRUD, ValidationError as CRUDValidationError
+from eo.actions import build_registry
 from eo.rules import (
     DOMAIN_RULES, check_reachability, forward_chain,
     intercept_action, propagate_fault, propagate_fault_event, root_cause,
 )
+from eo.rules.framework import RuleEngine, RuleContext, RuleSpec
 from eo.shacl import validate_entities
 from eo.timeseries import SqliteTelemetryStore
+from eo.timeseries.binding import BindingRegistry
 
 DATA = os.path.join(os.path.dirname(__file__), "..", "examples", "fleet.json")
 
@@ -350,6 +353,130 @@ def test_crud_update_immutable_fields():
         assert False, "id 不可变更"
     except CRUDError:
         pass
+
+
+# ---------------------------------------------------------------- 时序绑定
+def test_binding_read_and_snapshot():
+    store, _ = _load()
+    ts = SqliteTelemetryStore(":memory:")
+    ts.insert("eo:robot/ti5", "battery", 86.0, "2026-11-24T10:00:00")
+    ts.insert("eo:part/ti5/six-axis-force", "force_reading", 4.0, "2026-11-24T10:00:01")
+    reg = BindingRegistry(store, ts)
+    assert not reg.validate_bindings(), reg.validate_bindings()
+    assert reg.read("eo:robot/ti5", "current_battery") == 86.0
+    snap = reg.snapshot("eo:part/ti5/six-axis-force")
+    assert snap.get("current_force") == 4.0
+    assert reg.read("eo:robot/ti5", "no_such_slot") is None
+
+
+def test_binding_rejects_bad_binds_to():
+    store, _ = _load()
+    # 篡改一条注册表：binds_to 指向目标类不存在的槽
+    metric = store.get_node("eo:metric/battery")
+    metric.properties["binds_to"] = "no_such_slot"
+    reg = BindingRegistry(store, SqliteTelemetryStore(":memory:"))
+    errs = reg.validate_bindings()
+    assert any("no_such_slot" in e for e in errs)
+
+
+# ---------------------------------------------------------------- 规则框架
+def test_rule_engine_explain():
+    store, _ = _load()
+    eng = RuleEngine(store)
+    eng.add_rules(DOMAIN_RULES)
+    eng.run()
+    text = eng.explain("eo:task/carry-kettle", "over_torque")
+    assert "torque_constraint" in text and "kettle" in text
+
+
+def test_rule_priority_dedup():
+    store, _ = _load()
+    eng = RuleEngine(store)
+
+    def low(ctx: RuleContext):
+        ctx.assert_(store.nodes()[0].id, "p", "low")
+
+    def high(ctx: RuleContext):
+        ctx.assert_(store.nodes()[0].id, "p", "high")
+
+    eng.add_rule(RuleSpec("low", "", category="deduction", priority=10, fire=low))
+    eng.add_rule(RuleSpec("high", "", category="deduction", priority=999, fire=high))
+    eng.run()
+    assert eng.facts[(store.nodes()[0].id, "p")].v == "high", "高优先级规则先断言并胜出"
+
+
+def test_rule_action_binding():
+    """监测规则断言 → 声明式动作绑定 → knowledge.writeback 写回本体。"""
+    crud = _crud()
+    reg = build_registry(crud)
+    store = crud.store
+    eng = RuleEngine(store, actions=reg)
+
+    def monitor(ctx: RuleContext):
+        ctx.assert_("eo:object/cup", "slip", True, evidence=["测试"])
+
+    eng.add_rule(RuleSpec(
+        "slip_monitor", "", category="monitoring", priority=50, fire=monitor,
+        actions=[{"action": "knowledge.writeback",
+                  "params": {"entity_id": "{s}", "patch": {"surface": "slippery"}}}],
+    ))
+    eng.run()
+    assert crud.get("eo:object/cup")["surface"] == "slippery"
+    assert any("eo:log/action-" in eid for eid in crud.entities)
+
+
+# ---------------------------------------------------------------- Action 模型
+def test_action_dispatch():
+    crud = _crud()
+    reg = build_registry(crud)
+    result = reg.execute("task.dispatch", actor="test", task_id="eo:task/carry-cup")
+    assert result.ok and result.audit_log_id
+    task = crud.get("eo:task/carry-cup")
+    assert task["status"] == "executing" and task["verdict"] == "feasible"
+    # 审计已落库且过 Gate A
+    assert crud.get(result.audit_log_id)["action_type"] == "task.dispatch"
+
+
+def test_action_infeasible_dispatch():
+    crud = _crud()
+    reg = build_registry(crud)
+    result = reg.execute("task.dispatch", actor="test", task_id="eo:task/carry-cup-by-bx2")
+    assert result.ok  # 动作本身成功执行（业务结论是不可达）
+    assert crud.get("eo:task/carry-cup-by-bx2")["status"] == "failed"
+    assert any("不可达" in m for m in result.messages)
+
+
+def test_action_rejections():
+    crud = _crud()
+    reg = build_registry(crud)
+    # 目标不存在
+    r1 = reg.execute("task.dispatch", actor="test", task_id="eo:task/ghost")
+    assert not r1.ok and "不存在" in r1.messages[0]
+    # 目标类型不符（mode_id 指向非 FaultMode）
+    r2 = reg.execute("fault.report", actor="test", mode_id="eo:object/cup")
+    assert not r2.ok
+    # 改派目标不是 Robot
+    r3 = reg.execute("task.reassign", actor="test", task_id="eo:task/carry-cup",
+                     robot_id="eo:object/cup")
+    assert not r3.ok
+    # 写回坏值 → Gate A 拒绝 → 动作失败 + 审计 result=failed
+    r4 = reg.execute("knowledge.writeback", actor="test", entity_id="eo:object/cup",
+                     patch={"surface": "wet"})
+    assert not r4.ok
+    audit = crud.get(r4.audit_log_id)
+    assert audit["result"] == "failed"
+    # 缺参数
+    r5 = reg.execute("task.dispatch", actor="test")
+    assert not r5.ok and "缺少参数" in r5.messages[0]
+
+
+def test_action_audit_seq_no_collision():
+    """跨注册表实例执行：审计 id 从库中续号，不冲突。"""
+    crud = _crud()
+    r1 = build_registry(crud).execute("task.dispatch", actor="a", task_id="eo:task/carry-cup")
+    r2 = build_registry(crud).execute("task.dispatch", actor="b", task_id="eo:task/carry-cup")
+    assert r1.audit_log_id != r2.audit_log_id
+    assert crud.get(r1.audit_log_id) and crud.get(r2.audit_log_id)
 
 
 # ---------------------------------------------------------------- 时序库

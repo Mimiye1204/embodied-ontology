@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""任务调度器：下发（Gate B 可达性+拦截）→ 执行推进 → 终态，全部经 ActionLog 审计。"""
+"""任务调度器：经 Action 注册表执行受控动作（task.dispatch / task.reassign），
+动作内部完成 Gate B 检查与自动审计；本模块只做执行推进与时间线输出。"""
 from __future__ import annotations
 
 from typing import Dict, Optional
@@ -14,37 +15,19 @@ class TaskDispatcher:
 
     # ---------------------------------------------------------------- 下发
     def dispatch(self, task_id: str, t: int) -> Optional[dict]:
-        """Gate B：可达性判定（写回 verdict）+ 动作拦截 → 状态推进。"""
+        """task.dispatch 动作：可达性 + 拦截 → 状态迁移（结果含消息与审计 id）。"""
         env = self.engine
-        task = env.store.get_node(task_id)
-        if task is None:
-            env.timeline.event(t, "dispatch", f"✗ 任务 {task_id} 不存在")
+        result = env.actions.execute("task.dispatch", actor="simulation", task_id=task_id)
+        if result is None:
+            env.timeline.event(t, "dispatch", "✗ 未知动作 task.dispatch")
             return None
-
-        r = env.reachability(task_id)
-        env.log_action(t, "task.reachability_check", task_id, r.verdict,
-                       detail="；".join(r.problems))
-
-        if r.verdict == "infeasible":
-            env.write([self._task_patch(task_id, t, "failed", verdict="infeasible")], t)
-            env.timeline.event(t, "dispatch",
-                               f"✗ {task_id}（{task.get('label')}）不可达：{r.problems}")
-            return {"verdict": "infeasible", "problems": r.problems}
-
-        hits = env.intercept(task_id)
-        if hits:
-            env.log_action(t, "task.intercept", task_id, "rewritten",
-                           detail="；".join(f"[{h.kind}] {h.rewrite}" for h in hits))
-            env.write([self._task_patch(task_id, t, "intercepted")], t)
-            env.timeline.event(t, "dispatch", f"⛔ {task_id}（{task.get('label')}）触发 {len(hits)} 项拦截：")
-            for h in hits:
-                env.timeline.event(t, "intercept", f"    [{h.kind}] {h.reason} → {h.rewrite}")
-            return {"verdict": "intercepted", "hits": hits}
-
-        env.write([self._task_patch(task_id, t, "executing", verdict="feasible")], t)
-        self._started[task_id] = t
-        env.timeline.event(t, "dispatch", f"✓ {task_id}（{task.get('label')}）放行 → executing")
-        return {"verdict": "feasible"}
+        for m in result.messages:
+            env.timeline.event(t, "dispatch", m)
+        task = env.crud.get(task_id)
+        if result.ok and task and task.get("status") == "executing":
+            self._started[task_id] = t
+        return {"ok": result.ok, "messages": result.messages,
+                "audit": result.audit_log_id}
 
     # ---------------------------------------------------------------- 推进
     def advance(self, t: int) -> None:
@@ -59,21 +42,18 @@ class TaskDispatcher:
             del self._started[task_id]
 
     # ---------------------------------------------------------------- 改派
-    def reassign(self, task_id: str, robot_id: str, t: int) -> None:
+    def reassign(self, task_id: str, robot_id: str, t: int) -> Optional[dict]:
         env = self.engine
-        env.log_action(t, "task.reassign", task_id, "ok", detail=robot_id)
-        env.write([self._task_patch(task_id, t, "pending", robot_id=robot_id)], t)
-        env.timeline.event(t, "dispatch", f"→ {task_id} 改派至 {robot_id}")
+        result = env.actions.execute("task.reassign", actor="simulation",
+                                     task_id=task_id, robot_id=robot_id)
+        if result is None:
+            env.timeline.event(t, "dispatch", "✗ 未知动作 task.reassign")
+            return None
+        for m in result.messages:
+            env.timeline.event(t, "dispatch", m)
+        return {"ok": result.ok}
 
     # ---------------------------------------------------------------- 辅助
-    def _task_patch(self, task_id: str, t: int, status: str,
-                    robot_id: Optional[str] = None,
-                    verdict: Optional[str] = None) -> dict:
-        """任务状态补丁（write() 按 id 浅合并，未提及的槽保留现值）。"""
-        patch: dict = {"id": task_id, "type": "Task", "status": status,
-                       "updated_at": iso(t)}
-        if robot_id:
-            patch["assigned_to"] = robot_id
-        if verdict:
-            patch["verdict"] = verdict
-        return patch
+    def _task_patch(self, task_id: str, t: int, status: str) -> dict:
+        """任务状态补丁（CRUD.apply 按 id 浅合并，未提及的槽保留现值）。"""
+        return {"id": task_id, "type": "Task", "status": status, "updated_at": iso(t)}

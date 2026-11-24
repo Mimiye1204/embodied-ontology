@@ -148,6 +148,32 @@ def cmd_export(crud, args) -> int:
     return 0
 
 
+def cmd_action_list(crud, args) -> int:
+    from .actions import build_registry
+    reg = build_registry(crud)
+    for a in reg.list():
+        print(f"  {a['name']:22s} {a['description']}")
+        print(f"       params={a['params']}  targets={a['targets']}")
+    return 0
+
+
+def cmd_action(crud, args) -> int:
+    from .actions import build_registry
+    reg = build_registry(crud)
+    params = _parse_json(args.params)
+    result = reg.execute(args.action, actor=args.actor or "cli", **params)
+    if result is None:
+        print(f"✗ 未知动作 {args.action}（用 action-list 查看）")
+        return 1
+    for m in result.messages:
+        print(f"  {m}")
+    if not result.ok:
+        return 1
+    _save(crud, args)
+    print(f"✓ {result.action} 完成（审计 {result.audit_log_id}）")
+    return 0
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -174,6 +200,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("id"); p.add_argument("--physical", action="store_true", help="物理删除（默认软删除）")
     sub.add_parser("validate", help="全量校验（Gate C）")
     p = sub.add_parser("export", help="导出 JSON-LD"); p.add_argument("--out")
+    sub.add_parser("action-list", help="列出受控动作（ActionType 注册表）")
+    p = sub.add_parser("action", help="执行受控动作")
+    p.add_argument("action"); p.add_argument("params", help="参数 JSON")
+    p.add_argument("--actor", default="cli")
 
     args = parser.parse_args(argv)
     try:
@@ -186,6 +216,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "get": cmd_get, "list": cmd_list, "create": cmd_create, "update": cmd_update,
         "set": cmd_set, "unset": cmd_unset, "link": cmd_link, "unlink": cmd_unlink,
         "delete": cmd_delete, "validate": cmd_validate, "export": cmd_export,
+        "action": cmd_action, "action-list": cmd_action_list,
     }
     return handlers[args.cmd](crud, args)
 

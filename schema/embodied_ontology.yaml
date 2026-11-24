@@ -10,7 +10,7 @@ description: >-
   docs/02-neo4j-mapping-spec.md（节点-边映射规范）、
   docs/03-shacl-framework.md（SHACL 校验规则框架）。
 license: MIT
-version: 1.0.0
+version: 1.1.0
 prefixes:
   eo: https://ontology.huilun.cn/embodied/
   linkml: https://w3id.org/linkml/
@@ -155,6 +155,21 @@ enums:
         description: 整数
       bool:
         description: 布尔
+  MetricAggregation:
+    description: 测点聚合方式（时序绑定读取时的聚合算子）
+    permissible_values:
+      last:
+        description: 最新值
+      avg:
+        description: 窗口均值
+      min:
+        description: 窗口最小值
+      max:
+        description: 窗口最大值
+      count:
+        description: 窗口样本数
+      rate:
+        description: 变化率（窗口末值-首值）/窗口秒
   VerdictType:
     description: 任务可达性结论（规则引擎计算写回）
     permissible_values:
@@ -210,6 +225,7 @@ classes:
       - firmware_version
       - located_at
       - has_part
+      - current_battery
     slot_usage:
       status:
         range: RobotStatus
@@ -226,6 +242,8 @@ classes:
       - grip_force_n
       - max_speed_ms
       - provides_capability
+      - current_force
+      - current_angle
 
   Capability:
     description: 能力注册（能力 → 提供部件的反向通过 provides_capability 遍历）
@@ -268,6 +286,7 @@ classes:
       - involves_object
       - assigned_to
       - at_site
+      - progress
 
   Constraint:
     description: 约束库（动作拦截的检查依据；expression 为可读公式，suggested_rewrite 为改写建议）
@@ -337,6 +356,9 @@ classes:
       - max_value
       - sampling_hz
       - retention_days
+      - binds_to
+      - aggregation
+      - window_seconds
 
   TelemetryPoint:
     description: 测点值（高频数据不落图库，只进 TimescaleDB；此类仅用于小窗口的 JSON-LD 交换）
@@ -514,6 +536,28 @@ slots:
     required: true
     description: 约束作用对象（Link：部件/能力/任务）
 
+  # ---- 动态属性（时序绑定物化的槽；不落图库，由绑定读取器按需计算） ----
+  current_battery:
+    range: percent
+    description: 当前电量 %（动态：由测点 battery 绑定物化）
+    annotations:
+      dynamic: true
+  current_force:
+    range: force_n
+    description: 当前力读数 N（动态：由测点 force_reading 绑定物化）
+    annotations:
+      dynamic: true
+  current_angle:
+    range: float
+    description: 当前关节角度（动态：由测点 joint_angle 绑定物化）
+    annotations:
+      dynamic: true
+  progress:
+    range: percent
+    description: 任务进度 %（动态：由测点 task_progress 绑定物化）
+    annotations:
+      dynamic: true
+
   # ---- FaultMode ----
   mode_code:
     range: string
@@ -584,6 +628,16 @@ slots:
   retention_days:
     range: retention_days
     description: 数据保留天数
+  binds_to:
+    range: string
+    description: 绑定的动态属性槽名（测点物化到该槽；如 current_battery）
+  aggregation:
+    range: MetricAggregation
+    description: 绑定的聚合算子（缺省 last）
+  window_seconds:
+    range: float
+    minimum_value: 0
+    description: 聚合窗口（秒；0=全量窗口）
   measures:
     range: Entity
     description: 测点测量对象（Link：部件/机器人/任务）

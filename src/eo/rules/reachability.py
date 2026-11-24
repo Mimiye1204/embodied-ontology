@@ -37,6 +37,14 @@ def part_of_robot(store: GraphStore, part_id: str, robot_id: str) -> bool:
     return False
 
 
+def robot_of_part(store: GraphStore, part_id: str) -> Optional[str]:
+    """反向：部件 → 所属机器人 id（无归属 → None）。"""
+    for robot in store.nodes():
+        if robot.type == "Robot" and part_of_robot(store, part_id, robot.id):
+            return robot.id
+    return None
+
+
 def check_reachability(store: GraphStore, task_id: str) -> ReachabilityResult:
     task = store.get_node(task_id)
     if task is None:

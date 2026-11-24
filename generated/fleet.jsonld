@@ -17,6 +17,7 @@
       "@id": "eo:affects_capability",
       "@type": "@id"
     },
+    "aggregation": "eo:aggregation",
     "assigned_to": {
       "@id": "eo:assigned_to",
       "@type": "@id"
@@ -25,6 +26,7 @@
       "@id": "eo:at_site",
       "@type": "@id"
     },
+    "binds_to": "eo:binds_to",
     "code": "eo:code",
     "constrains": {
       "@id": "eo:constrains",
@@ -35,6 +37,9 @@
       "@id": "eo:created_at",
       "@type": "xsd:dateTime"
     },
+    "current_angle": "eo:current_angle",
+    "current_battery": "eo:current_battery",
+    "current_force": "eo:current_force",
     "deadline": {
       "@id": "eo:deadline",
       "@type": "xsd:dateTime"
@@ -103,6 +108,7 @@
     },
     "payload_kg": "eo:payload_kg",
     "priority": "eo:priority",
+    "progress": "eo:progress",
     "provides_capability": {
       "@id": "eo:provides_capability",
       "@type": "@id"
@@ -146,7 +152,8 @@
     "value_type": "eo:value_type",
     "verdict": "eo:verdict",
     "version": "eo:version",
-    "weight_kg": "eo:weight_kg"
+    "weight_kg": "eo:weight_kg",
+    "window_seconds": "eo:window_seconds"
   },
   "@graph": [
     {
@@ -290,6 +297,18 @@
       ]
     },
     {
+      "id": "eo:log/action-0001",
+      "type": "ActionLog",
+      "action_type": "task.dispatch",
+      "actor": "demo",
+      "created_at": "2026-11-24T09:40:46.430960+00:00",
+      "detail": "{\"task_id\": \"eo:task/carry-cup\"}",
+      "label": "task.dispatch → eo:task/carry-cup",
+      "occurred_at": "2026-11-24T09:40:46.430960+00:00",
+      "result": "ok",
+      "target": "eo:task/carry-cup"
+    },
+    {
       "id": "eo:log/dispatch-001",
       "type": "ActionLog",
       "action_type": "task.dispatch",
@@ -304,6 +323,8 @@
     {
       "id": "eo:metric/battery",
       "type": "TelemetryMetric",
+      "aggregation": "last",
+      "binds_to": "current_battery",
       "created_at": "2026-11-20T08:00:00+08:00",
       "label": "电量",
       "max_value": 100.0,
@@ -318,6 +339,8 @@
     {
       "id": "eo:metric/force-reading",
       "type": "TelemetryMetric",
+      "aggregation": "last",
+      "binds_to": "current_force",
       "created_at": "2026-11-20T08:00:00+08:00",
       "label": "六维力读数",
       "max_value": 100.0,
@@ -332,6 +355,8 @@
     {
       "id": "eo:metric/joint-angle",
       "type": "TelemetryMetric",
+      "aggregation": "last",
+      "binds_to": "current_angle",
       "created_at": "2026-11-20T08:00:00+08:00",
       "label": "关节角度",
       "metric_code": "joint_angle",
@@ -344,6 +369,8 @@
     {
       "id": "eo:metric/task-progress",
       "type": "TelemetryMetric",
+      "aggregation": "last",
+      "binds_to": "progress",
       "created_at": "2026-11-20T08:00:00+08:00",
       "label": "任务进度",
       "max_value": 100.0,
@@ -602,7 +629,8 @@
       "created_at": "2026-11-24T09:00:00+08:00",
       "label": "端杯子",
       "priority": 5,
-      "status": "pending",
+      "status": "intercepted",
+      "verdict": "feasible",
       "assigned_to": "eo:robot/ti5",
       "involves_object": "eo:object/cup",
       "requires_capability": "eo:cap/power-grasp"
@@ -643,7 +671,7 @@
       "created_at": "2026-11-24T09:03:00+08:00",
       "label": "抓鸡蛋",
       "priority": 7,
-      "status": "executing",
+      "status": "pending",
       "assigned_to": "eo:robot/ti5",
       "involves_object": "eo:object/egg",
       "requires_capability": [

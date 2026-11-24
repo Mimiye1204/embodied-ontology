@@ -87,6 +87,13 @@ eo:BodyPartShape a sh:NodeShape ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:path eo:current_angle ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:current_force ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:deprecated ],
@@ -485,6 +492,11 @@ eo:RobotShape a sh:NodeShape ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:maxInclusive 100 ;
+            sh:minInclusive 0 ;
+            sh:path eo:current_battery ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:deprecated ],
@@ -606,6 +618,11 @@ eo:TaskShape a sh:NodeShape ;
         [ sh:datatype xsd:integer ;
             sh:maxCount 1 ;
             sh:path eo:priority ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:maxInclusive 100 ;
+            sh:minInclusive 0 ;
+            sh:path eo:progress ],
         [ sh:class eo:Capability ;
             sh:minCount 1 ;
             sh:path eo:requires_capability ],
@@ -638,7 +655,13 @@ eo:TelemetryMetricShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:dateTime ;
+    sh:property [ sh:in ( "avg" "count" "last" "max" "min" "rate" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:aggregation ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:binds_to ],
+        [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
@@ -686,7 +709,10 @@ eo:TelemetryMetricShape a sh:NodeShape ;
         [ sh:datatype xsd:integer ;
             sh:maxCount 1 ;
             sh:minInclusive 0 ;
-            sh:path eo:version ] ;
+            sh:path eo:version ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:path eo:window_seconds ] ;
     sh:targetClass eo:TelemetryMetric .
 
 eo:TelemetryPointShape a sh:NodeShape ;

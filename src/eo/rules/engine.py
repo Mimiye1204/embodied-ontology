@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
-"""自研轻量规则引擎（正向链，固定点迭代 + 逐规则增量打印）。
+"""兼容层：旧 forward_chain 接口（tuple 事实集）包装规则引擎框架。
 
-设计目标（对应《本体系统调研》§6.1）：
-  - 规则即数据：Rule 是普通对象，改一条立刻看到它多推出什么。
-  - 增量打印：每次迭代记录「这条规则新推出了哪些事实」，便于快速调规则。
-  - 证明可回看：trace 保留每条结论来自哪条规则。
-
-Fact 统一为三元组 (subject, predicate, object)，与图节点/边对齐。
+新代码直接用 eo.rules.framework.RuleEngine（证明链/优先级/动态属性/动作绑定）。
 """
 from __future__ import annotations
 
@@ -14,16 +9,17 @@ from dataclasses import dataclass
 from typing import Any, Callable, List, Optional, Set, Tuple
 
 from ..graph.base import GraphStore
+from .framework import RuleContext, RuleEngine, RuleSpec, RoundTrace, Fact  # noqa: F401
 
-# (subject_id, predicate, value)
-Fact = Tuple[str, str, Any]
+# 旧版事实三元组类型（兼容）
+Fact = Tuple[str, str, Any]  # noqa: F811
 
-# 规则触发函数：给定图与当前事实集，返回新推出的事实集
 Fire = Callable[[GraphStore, Set[Fact]], Set[Fact]]
 
 
 @dataclass
 class Rule:
+    """旧版规则对象（fire(store, facts)->set），由 forward_chain 包装成 RuleSpec。"""
     name: str
     description: str
     fire: Fire
@@ -32,39 +28,32 @@ class Rule:
         return self.fire(store, facts)
 
 
-@dataclass
-class RoundTrace:
-    rule_name: str
-    description: str
-    added: Set[Fact]
+def _wrap_rule(rule) -> RuleSpec:
+    if isinstance(rule, RuleSpec):
+        return rule
+
+    def fire(ctx: RuleContext) -> None:
+        current = ctx.engine.fact_tuples()
+        for s, p, v in rule.fire(ctx.store, current):
+            ctx.assert_(s, p, v)
+
+    return RuleSpec(name=rule.name, description=rule.description, fire=fire)
 
 
 def forward_chain(
     store: GraphStore,
-    rules: List[Rule],
-    facts: Optional[Set[Fact]] = None,
+    rules: List,
+    facts: Optional[Set[Tuple[str, str, Any]]] = None,
     max_rounds: int = 20,
-) -> Tuple[Set[Fact], List[RoundTrace]]:
-    """反复触发规则直到没有新事实（不动点）。
-
-    返回 (facts, trace)。trace 每一项记录某条规则在某一轮新推出的事实，
-    空集的事实不会重复触发，保证收敛。
-    """
-    facts: Set[Fact] = set(facts or [])
-    trace: List[RoundTrace] = []
-
-    for _ in range(max_rounds):
-        newly_total: Set[Fact] = set()
-        for rule in rules:
-            added = rule(store, facts) - facts
-            if added:
-                newly_total |= added
-                trace.append(RoundTrace(rule.name, rule.description, added))
-        if not newly_total:
-            break
-        facts |= newly_total
-
-    return facts, trace
+) -> Tuple[Set[Tuple[str, str, Any]], List[RoundTrace]]:
+    """正向链（兼容接口）：返回 (事实集, trace)。规则可为 RuleSpec 或旧 Rule。"""
+    engine = RuleEngine(store)
+    for r in rules:
+        engine.add_rule(_wrap_rule(r))
+    if facts:
+        engine.seed(set(facts))
+    engine.run(max_rounds)
+    return engine.fact_tuples(), engine.trace
 
 
 def nodes_of_type(store: GraphStore, type_name: str):

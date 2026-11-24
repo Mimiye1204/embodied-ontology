@@ -17,6 +17,7 @@
       "@id": "eo:affects_capability",
       "@type": "@id"
     },
+    "aggregation": "eo:aggregation",
     "assigned_to": {
       "@id": "eo:assigned_to",
       "@type": "@id"
@@ -25,6 +26,7 @@
       "@id": "eo:at_site",
       "@type": "@id"
     },
+    "binds_to": "eo:binds_to",
     "code": "eo:code",
     "constrains": {
       "@id": "eo:constrains",
@@ -35,6 +37,9 @@
       "@id": "eo:created_at",
       "@type": "xsd:dateTime"
     },
+    "current_angle": "eo:current_angle",
+    "current_battery": "eo:current_battery",
+    "current_force": "eo:current_force",
     "deadline": {
       "@id": "eo:deadline",
       "@type": "xsd:dateTime"
@@ -103,6 +108,7 @@
     },
     "payload_kg": "eo:payload_kg",
     "priority": "eo:priority",
+    "progress": "eo:progress",
     "provides_capability": {
       "@id": "eo:provides_capability",
       "@type": "@id"
@@ -146,6 +152,7 @@
     "value_type": "eo:value_type",
     "verdict": "eo:verdict",
     "version": "eo:version",
-    "weight_kg": "eo:weight_kg"
+    "weight_kg": "eo:weight_kg",
+    "window_seconds": "eo:window_seconds"
   }
 }

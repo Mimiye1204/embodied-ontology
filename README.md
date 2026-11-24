@@ -3,10 +3,11 @@
 多机器人编队的具身本体论工程实现（Schema v1.0.0）：
 **LinkML 定义 Schema → SHACL 校验（L0+L1）→ JSON-LD 全域交换 → Neo4j 图存储 → 自研规则引擎（L2）→ TimescaleDB 时序库**。
 
-> 设计文档（先读这三份）：
+> 设计文档（先读这四份）：
 > - [docs/01-linkml-schema-design.md](docs/01-linkml-schema-design.md) — Schema 设计（13 个 ObjectType、ID 规范、ADR、演进策略）
 > - [docs/02-neo4j-mapping-spec.md](docs/02-neo4j-mapping-spec.md) — 节点-边映射规范（类型映射、约束/索引 DDL、批量加载、查询模板）
 > - [docs/03-shacl-framework.md](docs/03-shacl-framework.md) — 校验框架（三层架构、四道校验门、SPARQL 形状模式库）
+> - [docs/04-动力层设计.md](docs/04-动力层设计.md) — 时序属性绑定 · 规则引擎框架 · Action 绑定模型
 
 ## 架构
 
@@ -67,6 +68,7 @@ schema/embodied_ontology.yaml （LinkML，单一事实来源，v1.0.0）
 - **归纳闭环**：力读数骤降 67% → 写回 surface=slippery → 规则重跑 → grip_factor=1.5 → JSON-LD 带出
 - **SHACL 七类负例拦截**：唯一键冲突 / 悬空引用 / 未注册测点 / 能力无提供者 / 负重量 / 枚举越界 / 未知属性
 - **CRUD + Gate A 落地**：`eo/crud.py` 唯一写路径（Object 实体 / Property 标量属性 / Link 关系的 create/get/update/delete/link/unlink），每次写=补丁浅合并→全量 SHACL→原子提交，失败回滚+结构化违规报告（focus_node/path/message/severity/source_shape）；CLI 即 `cli.py`；仿真与 CRUD 共用同一条写路径
+- **动力层三件套**（docs/04）：时序属性绑定（测点注册表 binds_to → 动态属性物化，聚合算子 last/avg/…）、规则引擎框架（RuleSpec 数据化规则/优先级/证明链 explain()/规则→动作声明式绑定）、Action 模型（6 个受控动作，参数+目标类型校验+自动审计）；监测规则→写回→重推的闭环见 sim slip_loop 场景
 
 ## 扩展路径
 

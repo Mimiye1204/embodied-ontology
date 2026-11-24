@@ -40,6 +40,7 @@ class OntologyCRUD:
     def __init__(self, store: Optional[GraphStore] = None) -> None:
         self.store: GraphStore = store or MemoryStore()
         self.entities: Dict[str, Dict[str, Any]] = {}   # id → 实体 dict（权威状态）
+        self.version: int = 0   # 实际状态变更计数（规则引擎据此失效派生事实）
 
     # ================================================================ 装载
     def load(self, entities: List[Dict[str, Any]]) -> None:
@@ -49,6 +50,7 @@ class OntologyCRUD:
         if not report.conforms:
             raise ValidationError(report)
         self.entities = merged
+        self.version += 1
         self._rebuild()
 
     def _rebuild(self) -> None:
@@ -59,6 +61,8 @@ class OntologyCRUD:
         report = validate_entities_structured(list(new_state.values()))
         if not report.conforms:
             raise ValidationError(report)
+        if new_state != self.entities:
+            self.version += 1   # 仅实际变更才计数（幂等写不触发事实失效）
         self.entities = new_state
         self._rebuild()
 
