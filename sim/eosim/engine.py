@@ -10,14 +10,12 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
-from eo.graph import MemoryStore
-from eo.graph.loader import load_entities
+from eo.crud import OntologyCRUD, ValidationError as GateAError
 from eo.jsonld import export_jsonld, graph_to_entities
 from eo.rules import (
     check_reachability, forward_chain, DOMAIN_RULES,
     intercept_action, propagate_fault_event, root_cause,
 )
-from eo.shacl import validate_entities
 from eo.timeseries import SqliteTelemetryStore
 
 from .clock import iso
@@ -39,15 +37,14 @@ class SimulationEngine:
         shutil.rmtree(outputs, ignore_errors=True)  # 每次运行清空产物
         os.makedirs(outputs, exist_ok=True)
 
-        # ---- Gate A：世界数据入库前全量校验 ----
+        # ---- Gate A：世界数据入库前全量校验（唯一写路径：eo.crud.OntologyCRUD） ----
         with open(data_path, encoding="utf-8") as f:
             entities = json.load(f)
-        ok, report = validate_entities(entities)
-        if not ok:
-            raise ValueError(f"Gate A：世界数据未通过 SHACL 校验\n{report[:2000]}")
-
-        self.store = MemoryStore()
-        load_entities(self.store, entities)
+        self.crud = OntologyCRUD()
+        try:
+            self.crud.load(entities)
+        except GateAError as e:
+            raise ValueError(f"Gate A：世界数据未通过 SHACL 校验\n{e.report}") from e
         self.facts, _ = forward_chain(self.store, DOMAIN_RULES)
 
         self.telemetry = SqliteTelemetryStore(os.path.join(outputs, "telemetry.db"))
@@ -61,28 +58,20 @@ class SimulationEngine:
                                        f"规则引擎推出 {len(self.facts)} 条事实")
 
     # ---------------------------------------------------------------- 写路径
-    def write(self, updates: List[Dict[str, Any]], t: int) -> bool:
-        """Gate A 写回：补丁按 id 浅合并到现有实体 → 全量 SHACL 校验 → 重建图。
+    @property
+    def store(self):
+        """本体图（由 CRUD 层持有，重建后引用不变）。"""
+        return self.crud.store
 
-        - updates 里出现的字段覆盖旧值（None 表示保留现值）
-        - 校验拒绝则整体不落图
-        （仿真为单写者小图，用重建保证正确性；生产可做增量 diff 合并，语义相同。）
-        """
-        current = {e["id"]: e for e in graph_to_entities(self.store)}
-        for e in updates:
-            if e["id"] in current:
-                patch = {k: v for k, v in e.items() if v is not None}
-                current[e["id"]] = {**current[e["id"]], **patch}
-            else:
-                current[e["id"]] = e
-        merged = list(current.values())
-        ok, report = validate_entities(merged)
-        if not ok:
-            first = next((ln.strip() for ln in report.splitlines() if "Message:" in ln), "")
-            self.timeline.event(t, "gate-a", f"✗ 写回被拒绝：{first}")
+    def write(self, updates: List[Dict[str, Any]], t: int) -> bool:
+        """Gate A 写回（委托 OntologyCRUD.apply：浅合并 → 全量校验 → 原子提交）。"""
+        try:
+            self.crud.apply(updates)
+        except GateAError as e:
+            first = e.report.violations[0]
+            self.timeline.event(t, "gate-a",
+                                f"✗ 写回被拒绝：{first.focus_node} {first.message}")
             return False
-        self.store.clear()
-        load_entities(self.store, merged)
         self.facts, _ = forward_chain(self.store, DOMAIN_RULES, set())  # 事实集失效重算
         return True
 
@@ -115,10 +104,10 @@ class SimulationEngine:
             self.dispatcher.advance(t)
 
         # ---- 收尾：Gate C 校验 + JSON-LD 快照 ----
-        final = graph_to_entities(self.store)
-        ok, report = validate_entities(final)
-        self.timeline.event(duration, "gate-c", f"终态 {len(final)} 实体校验："
-                                                f"{'通过 ✓' if ok else '失败 ✗'}")
+        report = self.crud.validate()
+        self.timeline.event(duration, "gate-c",
+                            f"终态 {len(self.crud.entities)} 实体校验："
+                            f"{'通过 ✓' if report.conforms else '失败 ✗'}")
         export_jsonld(self.store, os.path.join(self.outputs, "fleet-final.jsonld"))
         self.timeline.event(duration, "finish",
                             f"快照 fleet-final.jsonld / telemetry.db 已写入 {self.outputs}")

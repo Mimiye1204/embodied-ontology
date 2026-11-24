@@ -55,12 +55,15 @@ def to_rdf_graph(doc: Dict[str, Any]):
     return g
 
 
-def _compact(iri: str) -> str:
-    """完整 IRI → 前缀形式（eo:cup）。"""
+def compact_iri(iri: str) -> str:
+    """完整 IRI → 前缀形式（eo:cup）；非本体的 IRI 原样返回。"""
     base = default_prefix_iri()
     if iri.startswith(base):
         return f"{default_prefix_name()}:{iri[len(base):]}"
     return iri
+
+
+_compact = compact_iri  # 兼容旧引用
 
 
 def from_jsonld_document(doc: Dict[str, Any]) -> List[Dict[str, Any]]:

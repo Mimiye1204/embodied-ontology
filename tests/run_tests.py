@@ -17,6 +17,7 @@ except Exception:
 from eo.graph import MemoryStore
 from eo.graph.loader import load_entities, load_json_file
 from eo.jsonld import export_jsonld, from_jsonld_document
+from eo.crud import CRUDError, OntologyCRUD, ValidationError as CRUDValidationError
 from eo.rules import (
     DOMAIN_RULES, check_reachability, forward_chain,
     intercept_action, propagate_fault, propagate_fault_event, root_cause,
@@ -238,6 +239,117 @@ def test_jsonld_roundtrip():
     assert task["assigned_to"] == "eo:robot/ti5"
     cup = next(e for e in back if e["id"] == "eo:object/cup")
     assert cup["has_handle"] is True and cup["weight_kg"] == 0.3
+
+
+# ---------------------------------------------------------------- CRUD
+def _crud():
+    crud = OntologyCRUD()
+    crud.load(copy.deepcopy(json.load(open(DATA, encoding="utf-8"))))
+    return crud
+
+
+PEN = {"id": "eo:object/pen", "type": "Object", "label": "笔",
+       "weight_kg": 0.02, "surface": "dry", "created_at": "2026-11-24T10:00:00+08:00"}
+
+
+def test_crud_create_and_get():
+    c = _crud()
+    c.create(dict(PEN))
+    assert c.get("eo:object/pen")["label"] == "笔"
+    assert c.validate().conforms
+
+
+def test_crud_rejects_duplicate_id():
+    c = _crud()
+    c.create(dict(PEN))
+    try:
+        c.create(dict(PEN))
+        assert False, "重复 id 应拒绝"
+    except CRUDError:
+        pass
+
+
+def test_crud_rejects_unknown_type():
+    try:
+        _crud().create({"id": "eo:x", "type": "Nope", "label": "x"})
+        assert False, "未知 ObjectType 应拒绝"
+    except CRUDError:
+        pass
+
+
+def test_crud_rejects_bad_value_and_rolls_back():
+    c = _crud()
+    before = c.get("eo:object/cup")["surface"]
+    try:
+        c.set_property("eo:object/cup", "surface", "wet")
+        assert False, "枚举越界应被 Gate A 拒绝"
+    except CRUDValidationError as e:
+        assert e.report.violations, "应携带结构化违规报告"
+    assert c.get("eo:object/cup")["surface"] == before, "拒绝后状态应回滚"
+
+
+def test_crud_property_set_unset():
+    c = _crud()
+    c.set_property("eo:object/cup", "weight_kg", 0.35)
+    assert c.get_property("eo:object/cup", "weight_kg") == 0.35
+    c.unset_property("eo:object/cup", "weight_kg")
+    assert c.get_property("eo:object/cup", "weight_kg") is None
+    assert c.validate().conforms
+
+
+def test_crud_link_replaces_single_value():
+    c = _crud()
+    c.link("eo:task/carry-cup", "eo:robot/bx2", "assigned_to")
+    assert c.get("eo:task/carry-cup")["assigned_to"] == "eo:robot/bx2"
+    c.unlink("eo:task/carry-cup", "eo:robot/bx2", "assigned_to")
+    assert c.get("eo:task/carry-cup").get("assigned_to") is None
+
+
+def test_crud_link_validations():
+    c = _crud()
+    try:
+        c.link("eo:robot/ti5", "eo:part/ghost", "has_part")
+        assert False, "目标不存在应拒绝"
+    except CRUDError:
+        pass
+    try:
+        c.link("eo:object/cup", "eo:robot/ti5", "weight_kg")
+        assert False, "非 Link 槽应拒绝"
+    except CRUDError:
+        pass
+
+
+def test_crud_delete_soft_and_physical():
+    c = _crud()
+    # 软删除：deprecated 标记，list 过滤、get 仍在
+    c.create(dict(PEN))
+    c.delete("eo:object/pen")
+    assert c.get("eo:object/pen")["deprecated"] is True
+    assert all(e["id"] != "eo:object/pen" for e in c.list())
+    # 物理删除有引用者：Gate A 拒绝（悬空引用）
+    try:
+        c.delete("eo:cap/power-grasp", physical=True)
+        assert False, "有引用者的物理删除应被拒绝"
+    except CRUDValidationError as e:
+        assert e.report.violations
+    assert c.get("eo:cap/power-grasp") is not None, "拒绝后状态应回滚"
+    # 无引用者：物理删除成功
+    c.delete("eo:object/pen", physical=True)
+    assert c.get("eo:object/pen") is None
+
+
+def test_crud_update_immutable_fields():
+    c = _crud()
+    try:
+        c.update("eo:object/cup", {"type": "Robot"})
+        assert False, "类型不可变更"
+    except CRUDError:
+        pass
+    try:
+        c.update("eo:object/cup", {"id": "eo:x"})
+        assert False, "id 不可变更"
+    except CRUDError:
+        pass
 
 
 # ---------------------------------------------------------------- 时序库

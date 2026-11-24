@@ -48,6 +48,15 @@ schema/embodied_ontology.yaml （LinkML，单一事实来源，v1.0.0）
 
 # 浏览器可视化报告（本体图 + 正常/故障切换 + 推理面板）
 .venv/Scripts/python.exe report.py
+
+# Object/Property/Link CRUD（所有写操作经 Gate A SHACL 校验，违规拒绝+回滚）
+.venv/Scripts/python.exe cli.py get eo:robot/ti5
+.venv/Scripts/python.exe cli.py list --type Task
+.venv/Scripts/python.exe cli.py set eo:object/cup weight_kg 0.35
+.venv/Scripts/python.exe cli.py link eo:task/carry-cup eo:robot/bx2 assigned_to
+.venv/Scripts/python.exe cli.py create '{"id":"eo:object/pen","type":"Object","label":"笔","weight_kg":0.02,"surface":"dry","created_at":"2026-11-24T10:00:00+08:00"}'
+.venv/Scripts/python.exe cli.py delete eo:object/pen [--physical]   # 默认软删除(deprecated)
+.venv/Scripts/python.exe cli.py validate
 ```
 
 ## 关键能力演示（demo 输出）
@@ -57,16 +66,18 @@ schema/embodied_ontology.yaml （LinkML，单一事实来源，v1.0.0）
 - **模式库故障传播**：事件 → 模式 force-sensor-failure → 力控失效 → 抓鸡蛋/捏硬币失败；端杯子依赖隔离不受影响；反向根因回溯到六维力传感器
 - **归纳闭环**：力读数骤降 67% → 写回 surface=slippery → 规则重跑 → grip_factor=1.5 → JSON-LD 带出
 - **SHACL 七类负例拦截**：唯一键冲突 / 悬空引用 / 未注册测点 / 能力无提供者 / 负重量 / 枚举越界 / 未知属性
+- **CRUD + Gate A 落地**：`eo/crud.py` 唯一写路径（Object 实体 / Property 标量属性 / Link 关系的 create/get/update/delete/link/unlink），每次写=补丁浅合并→全量 SHACL→原子提交，失败回滚+结构化违规报告（focus_node/path/message/severity/source_shape）；CLI 即 `cli.py`；仿真与 CRUD 共用同一条写路径
 
 ## 扩展路径
 
 | 想做什么 | 改哪里 |
 |---|---|
 | 加对象类型/属性 | `schema/embodied_ontology.yaml`（形状/@context/加载器自动跟随，见 docs/01 §7 迁移安全表） |
-| 加实体 | `examples/fleet.json`（Gate A 自动校验） |
+| 加实体/改数据 | `cli.py create/update/...` 或直接改 `examples/fleet.json`（Gate A 自动校验） |
 | 加领域不变量 | `src/eo/shacl/domain.ttl`（docs/03 §5 模式库） |
 | 加推理规则 | `src/eo/rules/domain.py`（正向链增量打印） |
 | 加故障场景 | 加一条 FaultMode 数据（不改代码） |
+| 程序化读写本体 | `eo/crud.py` 的 `OntologyCRUD`（唯一写路径，REST 包装直接加在它上面） |
 | 切生产存储 | `Neo4jStore` + `TimescaleTelemetryStore`（接口不变；DDL 见 ddl/） |
 
 ## 生产切换清单

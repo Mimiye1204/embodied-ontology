@@ -156,9 +156,11 @@ pyshacl 文本报告之上的结构化导出（validate.py 负责）：
 
 | 框架组件 | 实现 |
 |---|---|
-| L0 生成 | `src/eo/shacl/shapes.py`（含 unique_keys → 模式 A） |
-| L1 自动 | `shapes.py::build_referential_shapes()`（模式 B，全 Link 槽） |
+| L0 生成 | `src/eo/shacl/shapes.py`（含 unique_keys → 模式 A；BNode 确定性 id，可复现） |
+| L1 自动 | `shapes.py::build_l1_shapes()`（模式 B，全 Link 槽引用完整性） |
 | L1 手写 | `src/eo/shacl/domain.ttl` |
 | 校验执行 | `src/eo/shacl/validate.py`（L0+L1 合并为 shacl_graph，pyshacl） |
+| 结构化报告（§8） | `validate_entities_structured()` → `ValidationReport/Violation` |
+| Gate A 落地 | `src/eo/crud.py`（OntologyCRUD：所有写操作先校验后提交，失败回滚；CLI=`cli.py`） |
 | L2 | `src/eo/rules/`（intercept/reachability/faults/domain） |
 | 形状产物 | `generated/shapes.ttl`（提交版本库，漂移检测） |

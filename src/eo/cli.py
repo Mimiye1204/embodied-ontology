@@ -1,0 +1,183 @@
+# -*- coding: utf-8 -*-
+"""本体 CRUD 命令行：Object / Property / Link 操作，全部经 Gate A 校验。
+
+用法示例：
+  python cli.py get eo:robot/ti5
+  python cli.py list --type Task
+  python cli.py create '{"id":"eo:object/pen","type":"Object","label":"笔","weight_kg":0.02,"surface":"dry","created_at":"2026-11-24T10:00:00+08:00"}'
+  python cli.py update eo:object/pen '{"weight_kg": 0.03}'
+  python cli.py set eo:object/pen surface '"rough"'          # 值按 JSON 解析
+  python cli.py unset eo:object/pen surface
+  python cli.py link eo:robot/ti5 eo:part/ti5/new-part has_part
+  python cli.py unlink eo:task/carry-cup eo:robot/ti5 assigned_to
+  python cli.py delete eo:object/pen [--physical]
+  python cli.py validate
+  python cli.py export [--out generated/now.jsonld]
+
+状态文件：--file（默认 state/ontology.json；不存在时从 examples/fleet.json 初始化）。
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from typing import Any, List, Optional
+
+from .crud import CRUDError, OntologyCRUD, ValidationError
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DEFAULT_STATE = os.path.join(ROOT, "state", "ontology.json")
+INITIAL_DATA = os.path.join(ROOT, "examples", "fleet.json")
+
+
+def _parse_json(s: str) -> Any:
+    if s.startswith("@"):  # @file.json
+        with open(s[1:], encoding="utf-8") as f:
+            return json.load(f)
+    return json.loads(s)
+
+
+def _load(args) -> OntologyCRUD:
+    crud = OntologyCRUD()
+    if os.path.exists(args.file):
+        with open(args.file, encoding="utf-8") as f:
+            entities = json.load(f)
+    else:
+        with open(INITIAL_DATA, encoding="utf-8") as f:
+            entities = json.load(f)
+        print(f"[state] {args.file} 不存在，从 examples/fleet.json 初始化")
+    crud.load(entities)
+    return crud
+
+
+def _save(crud: OntologyCRUD, args) -> None:
+    os.makedirs(os.path.dirname(args.file), exist_ok=True)
+    with open(args.file, "w", encoding="utf-8") as f:
+        json.dump(list(crud.entities.values()), f, ensure_ascii=False, indent=2)
+
+
+def _run(crud: OntologyCRUD, args, fn, save: bool = True) -> int:
+    try:
+        fn()
+    except CRUDError as e:
+        print(f"✗ 操作拒绝：{e}")
+        return 1
+    except ValidationError as e:
+        print(e.report)
+        print("✗ 写操作未落地（状态不变）")
+        return 1
+    if save:
+        _save(crud, args)
+    return 0
+
+
+def cmd_get(crud, args) -> int:
+    def fn():
+        ent = crud.get(args.id)
+        if ent is None:
+            print(f"✗ 实体 {args.id} 不存在")
+        else:
+            print(json.dumps(ent, ensure_ascii=False, indent=2))
+    return _run(crud, args, fn, save=False)
+
+
+def cmd_list(crud, args) -> int:
+    def fn():
+        where = {}
+        if args.where:
+            for kv in args.where.split(","):
+                k, _, v = kv.partition("=")
+                where[k.strip()] = _parse_json(v.strip())
+        ents = crud.list(type=args.type, where=where)
+        print(f"{len(ents)} 个实体：")
+        for e in ents:
+            print(f"  {e['id']:42s} {e['type']:16s} {e.get('label', '')}")
+    return _run(crud, args, fn, save=False)
+
+
+def cmd_create(crud, args) -> int:
+    return _run(crud, args, lambda: crud.create(_parse_json(args.entity)))
+
+
+def cmd_update(crud, args) -> int:
+    return _run(crud, args, lambda: crud.update(args.id, _parse_json(args.patch)))
+
+
+def cmd_set(crud, args) -> int:
+    return _run(crud, args, lambda: crud.set_property(args.id, args.slot, _parse_json(args.value)))
+
+
+def cmd_unset(crud, args) -> int:
+    return _run(crud, args, lambda: crud.unset_property(args.id, args.slot))
+
+
+def cmd_link(crud, args) -> int:
+    return _run(crud, args, lambda: crud.link(args.src, args.dst, args.type))
+
+
+def cmd_unlink(crud, args) -> int:
+    return _run(crud, args, lambda: crud.unlink(args.src, args.dst, args.type))
+
+
+def cmd_delete(crud, args) -> int:
+    return _run(crud, args, lambda: crud.delete(args.id, physical=args.physical))
+
+
+def cmd_validate(crud, args) -> int:
+    report = crud.validate()
+    print(report)
+    return 0 if report.conforms else 1
+
+
+def cmd_export(crud, args) -> int:
+    path = args.out or os.path.join(ROOT, "generated", "current.jsonld")
+    crud.export_jsonld(path)
+    print(f"已导出 {path}（{len(crud.entities)} 个实体）")
+    return 0
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+    parser = argparse.ArgumentParser(description="具身本体论 · Object/Property/Link CRUD")
+    parser.add_argument("--file", default=DEFAULT_STATE, help="状态文件（JSON）")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("get", help="读实体"); p.add_argument("id")
+    p = sub.add_parser("list", help="列实体")
+    p.add_argument("--type", help="ObjectType 过滤")
+    p.add_argument("--where", help="属性等值过滤，如 status=\"pending\"")
+    p = sub.add_parser("create", help="新建实体（JSON 或 @file）"); p.add_argument("entity")
+    p = sub.add_parser("update", help="更新实体（补丁 JSON）")
+    p.add_argument("id"); p.add_argument("patch")
+    p = sub.add_parser("set", help="设置属性（值按 JSON 解析）")
+    p.add_argument("id"); p.add_argument("slot"); p.add_argument("value")
+    p = sub.add_parser("unset", help="移除属性"); p.add_argument("id"); p.add_argument("slot")
+    p = sub.add_parser("link", help="建立关系"); p.add_argument("src"); p.add_argument("dst"); p.add_argument("type")
+    p = sub.add_parser("unlink", help="移除关系"); p.add_argument("src"); p.add_argument("dst", nargs="?")
+    p.add_argument("--type")
+    p = sub.add_parser("delete", help="删除实体")
+    p.add_argument("id"); p.add_argument("--physical", action="store_true", help="物理删除（默认软删除）")
+    sub.add_parser("validate", help="全量校验（Gate C）")
+    p = sub.add_parser("export", help="导出 JSON-LD"); p.add_argument("--out")
+
+    args = parser.parse_args(argv)
+    try:
+        crud = _load(args)
+    except ValidationError as e:
+        print(e.report)
+        return 1
+
+    handlers = {
+        "get": cmd_get, "list": cmd_list, "create": cmd_create, "update": cmd_update,
+        "set": cmd_set, "unset": cmd_unset, "link": cmd_link, "unlink": cmd_unlink,
+        "delete": cmd_delete, "validate": cmd_validate, "export": cmd_export,
+    }
+    return handlers[args.cmd](crud, args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
