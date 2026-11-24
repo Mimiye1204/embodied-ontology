@@ -43,8 +43,11 @@ _BUILTIN_DATATYPES = {
 
 
 def _sparql_constraint(g: Graph, shape: URIRef, message: str, select: str) -> None:
-    """挂一个 SPARQL 约束（SELECT 每返回一行 = 一条违规；$this 由 pyshacl 预绑定）。"""
-    node = BNode()
+    """挂一个 SPARQL 约束（SELECT 每返回一行 = 一条违规；$this 由 pyshacl 预绑定）。
+
+    BNode 使用确定性 id（形状图可复现，支撑 docs/03 的漂移检测）。
+    """
+    node = BNode(f"c_{str(shape).rsplit('/', 1)[-1]}")
     g.add((shape, SH["sparql"], node))
     g.add((node, RDF.type, SH.SPARQLConstraint))
     g.add((node, SH["message"], Literal(message)))
@@ -66,7 +69,7 @@ def _emit_property_shape(g: Graph, shape: URIRef, class_name: str, slot_name: st
         # 标识符在 JSON-LD 是节点自身 @id（IRI），存在性由 sh:nodeKind 保证
         return
 
-    node = BNode()
+    node = BNode(f"p_{class_name}_{slot_name}")
     g.add((shape, SH["property"], node))
     g.add((node, SH["path"], EO[slot_name]))
 
@@ -83,7 +86,7 @@ def _emit_property_shape(g: Graph, shape: URIRef, class_name: str, slot_name: st
     elif range_name in getattr(sv.schema, "enums", {}):
         values = enum_values(range_name)
         if values:
-            head = BNode()
+            head = BNode(f"in_{class_name}_{slot_name}")
             Collection(g, head, [Literal(v) for v in values])
             g.add((node, SH["in"], head))
     else:
@@ -142,7 +145,7 @@ def build_l0_shapes() -> Graph:
         g.add((shape, SH.targetClass, EO[class_name]))
         g.add((shape, SH.nodeKind, SH.IRI))
         g.add((shape, SH.closed, Literal(True)))
-        ignored = BNode()
+        ignored = BNode(f"ignored_{class_name}")
         Collection(g, ignored, [RDF.type])
         g.add((shape, SH.ignoredProperties, ignored))
         for slot_name in class_slots(class_name):

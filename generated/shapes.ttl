@@ -7,28 +7,7 @@ eo:ActionLogShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:path eo:updated_at ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:result ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:label ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:created_at ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:detail ],
-        [ sh:datatype xsd:integer ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:version ],
-        [ sh:datatype xsd:string ;
+    sh:property [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:action_type ],
@@ -39,16 +18,37 @@ eo:ActionLogShape a sh:NodeShape ;
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:path eo:occurred_at ],
-        [ sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:path eo:target ],
+            sh:path eo:created_at ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:deprecated ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:path eo:description ] ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:detail ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:occurred_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:result ],
+        [ sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path eo:target ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
     sh:targetClass eo:ActionLog .
 
 eo:AffectsBodypartTargetExistsShape a sh:NodeShape ;
@@ -83,46 +83,35 @@ eo:BodyPartShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:double ;
+    sh:property [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:load_capacity_kg ],
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:deprecated ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:label ],
+            sh:path eo:description ],
         [ sh:datatype xsd:integer ;
             sh:maxCount 1 ;
             sh:minInclusive 0 ;
             sh:path eo:dof ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:path eo:updated_at ],
-        [ sh:in ( "degraded" "fault" "ok" ) ;
-            sh:maxCount 1 ;
-            sh:path eo:health ],
-        [ sh:datatype xsd:double ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:torque_limit_nm ],
         [ sh:datatype xsd:double ;
             sh:maxCount 1 ;
             sh:minInclusive 0 ;
             sh:path eo:grip_force_n ],
-        [ sh:datatype xsd:dateTime ;
+        [ sh:in ( "degraded" "fault" "ok" ) ;
             sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:created_at ],
-        [ sh:datatype xsd:integer ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:version ],
+            sh:path eo:health ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:path eo:description ],
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:load_capacity_kg ],
         [ sh:datatype xsd:double ;
             sh:maxCount 1 ;
             sh:minInclusive 0 ;
@@ -131,7 +120,18 @@ eo:BodyPartShape a sh:NodeShape ;
             sh:maxCount 1 ;
             sh:path eo:part_of ],
         [ sh:class eo:Capability ;
-            sh:path eo:provides_capability ] ;
+            sh:path eo:provides_capability ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:torque_limit_nm ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
     sh:targetClass eo:BodyPart .
 
 eo:CapabilityCapabilityCodeKeyUniqueShape a sh:NodeShape ;
@@ -148,10 +148,24 @@ eo:CapabilityShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:dateTime ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:code ],
+        [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
         [ sh:datatype xsd:double ;
             sh:maxCount 1 ;
             sh:minInclusive 0 ;
@@ -159,24 +173,10 @@ eo:CapabilityShape a sh:NodeShape ;
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:path eo:updated_at ],
-        [ sh:datatype xsd:boolean ;
-            sh:maxCount 1 ;
-            sh:path eo:deprecated ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:code ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:label ],
         [ sh:datatype xsd:integer ;
             sh:maxCount 1 ;
             sh:minInclusive 0 ;
-            sh:path eo:version ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:description ] ;
+            sh:path eo:version ] ;
     sh:targetClass eo:Capability .
 
 eo:ConstrainsTargetExistsShape a sh:NodeShape ;
@@ -190,48 +190,48 @@ eo:ConstraintShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:integer ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:version ],
-        [ sh:datatype xsd:boolean ;
-            sh:maxCount 1 ;
-            sh:path eo:deprecated ],
+    sh:property [ sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path eo:constrains ],
         [ sh:in ( "gripper" "load" "pose" "speed" "torque" "workspace" ) ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:constraint_type ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:description ],
-        [ sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:path eo:constrains ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:suggested_rewrite ],
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:deprecated ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:label ],
+            sh:path eo:description ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:expression ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:suggested_rewrite ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:path eo:threshold ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
             sh:path eo:unit ],
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:path eo:updated_at ],
-        [ sh:datatype xsd:double ;
+        [ sh:datatype xsd:integer ;
             sh:maxCount 1 ;
-            sh:path eo:threshold ] ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
     sh:targetClass eo:Constraint .
 
 eo:EntityRefTargetExistsShape a sh:NodeShape ;
@@ -245,49 +245,49 @@ eo:FaultEventShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:created_at ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:description ],
-        [ sh:class eo:BodyPart ;
+    sh:property [ sh:class eo:BodyPart ;
             sh:path eo:affects_bodypart ],
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
-            sh:path eo:updated_at ],
-        [ sh:class eo:FaultMode ;
+            sh:minCount 1 ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
-            sh:path eo:of_mode ],
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:detected_at ],
-        [ sh:datatype xsd:boolean ;
-            sh:maxCount 1 ;
-            sh:path eo:deprecated ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:path eo:resolved_at ],
-        [ sh:in ( "acknowledged" "active" "resolved" ) ;
-            sh:maxCount 1 ;
-            sh:path eo:status ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:label ],
+        [ sh:class eo:FaultMode ;
+            sh:maxCount 1 ;
+            sh:path eo:of_mode ],
+        [ sh:class eo:Robot ;
+            sh:maxCount 1 ;
+            sh:path eo:reported_by ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:resolved_at ],
         [ sh:in ( "critical" "info" "warning" ) ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:severity ],
+        [ sh:in ( "acknowledged" "active" "resolved" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:status ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
         [ sh:datatype xsd:integer ;
             sh:maxCount 1 ;
             sh:minInclusive 0 ;
-            sh:path eo:version ],
-        [ sh:class eo:Robot ;
-            sh:maxCount 1 ;
-            sh:path eo:reported_by ] ;
+            sh:path eo:version ] ;
     sh:targetClass eo:FaultEvent .
 
 eo:FaultModeFaultmodeCodeKeyUniqueShape a sh:NodeShape ;
@@ -304,38 +304,38 @@ eo:FaultModeShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:path eo:updated_at ],
+    sh:property [ sh:class eo:BodyPart ;
+            sh:path eo:affects_bodypart ],
         [ sh:class eo:Capability ;
             sh:path eo:affects_capability ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:label ],
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:description ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:mode_code ],
-        [ sh:datatype xsd:integer ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:version ],
         [ sh:in ( "critical" "info" "warning" ) ;
             sh:maxCount 1 ;
             sh:path eo:default_severity ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:deprecated ],
-        [ sh:class eo:BodyPart ;
-            sh:path eo:affects_bodypart ] ;
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:mode_code ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
     sh:targetClass eo:FaultMode .
 
 eo:HasPartTargetExistsShape a sh:NodeShape ;
@@ -380,49 +380,49 @@ eo:ObjectShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:boolean ;
-            sh:maxCount 1 ;
-            sh:path eo:has_handle ],
-        [ sh:datatype xsd:double ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:weight_kg ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:path eo:updated_at ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:description ],
-        [ sh:in ( "dry" "rough" "slippery" ) ;
-            sh:maxCount 1 ;
-            sh:path eo:surface ],
-        [ sh:datatype xsd:boolean ;
-            sh:maxCount 1 ;
-            sh:path eo:has_thread ],
-        [ sh:datatype xsd:dateTime ;
+    sh:property [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
-            sh:path eo:is_fragile ],
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:has_handle ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:path eo:has_thread ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:is_container ],
-        [ sh:datatype xsd:string ;
+        [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
-            sh:path eo:object_code ],
+            sh:path eo:is_fragile ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:label ],
-        [ sh:datatype xsd:boolean ;
+        [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:path eo:deprecated ],
+            sh:path eo:object_code ],
+        [ sh:in ( "dry" "rough" "slippery" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:surface ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
         [ sh:datatype xsd:integer ;
             sh:maxCount 1 ;
             sh:minInclusive 0 ;
-            sh:path eo:version ] ;
+            sh:path eo:version ],
+        [ sh:datatype xsd:double ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:weight_kg ] ;
     sh:targetClass eo:Object .
 
 eo:OfModeTargetExistsShape a sh:NodeShape ;
@@ -481,45 +481,45 @@ eo:RobotShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:string ;
+    sh:property [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:path eo:serial ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:path eo:updated_at ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:label ],
+            sh:path eo:created_at ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:deprecated ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:path eo:model ],
+            sh:path eo:description ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:firmware_version ],
         [ sh:class eo:BodyPart ;
             sh:path eo:has_part ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:path eo:firmware_version ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:path eo:created_at ],
-        [ sh:datatype xsd:integer ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:version ],
+            sh:path eo:label ],
         [ sh:class eo:Site ;
             sh:maxCount 1 ;
             sh:path eo:located_at ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:model ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:serial ],
         [ sh:in ( "decommissioned" "maintenance" "offline" "online" ) ;
             sh:maxCount 1 ;
             sh:path eo:status ],
-        [ sh:datatype xsd:string ;
+        [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
-            sh:path eo:description ] ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
     sh:targetClass eo:Robot .
 
 eo:SiteShape a sh:NodeShape ;
@@ -528,32 +528,32 @@ eo:SiteShape a sh:NodeShape ;
     sh:nodeKind sh:IRI ;
     sh:property [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:path eo:description ],
+            sh:minCount 1 ;
+            sh:path eo:code ],
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
-        [ sh:datatype xsd:integer ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:version ],
-        [ sh:class eo:Site ;
-            sh:maxCount 1 ;
-            sh:path eo:parent ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:deprecated ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:label ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:path eo:updated_at ],
+            sh:path eo:description ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:path eo:code ] ;
+            sh:path eo:label ],
+        [ sh:class eo:Site ;
+            sh:maxCount 1 ;
+            sh:path eo:parent ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
     sh:targetClass eo:Site .
 
 eo:SiteSiteCodeKeyUniqueShape a sh:NodeShape ;
@@ -577,19 +577,9 @@ eo:TaskShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:string ;
+    sh:property [ sh:class eo:Robot ;
             sh:maxCount 1 ;
-            sh:path eo:description ],
-        [ sh:datatype xsd:integer ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:version ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:path eo:deadline ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:path eo:updated_at ],
+            sh:path eo:assigned_to ],
         [ sh:class eo:Site ;
             sh:maxCount 1 ;
             sh:path eo:at_site ],
@@ -597,31 +587,41 @@ eo:TaskShape a sh:NodeShape ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
-        [ sh:datatype xsd:string ;
+        [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:label ],
-        [ sh:in ( "constrained" "feasible" "infeasible" "rewrite" ) ;
-            sh:maxCount 1 ;
-            sh:path eo:verdict ],
-        [ sh:class eo:Capability ;
-            sh:minCount 1 ;
-            sh:path eo:requires_capability ],
+            sh:path eo:deadline ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:deprecated ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:path eo:status ],
-        [ sh:class eo:Robot ;
+            sh:path eo:description ],
+        [ sh:class eo:Object ;
             sh:maxCount 1 ;
-            sh:path eo:assigned_to ],
+            sh:path eo:involves_object ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:label ],
         [ sh:datatype xsd:integer ;
             sh:maxCount 1 ;
             sh:path eo:priority ],
-        [ sh:class eo:Object ;
+        [ sh:class eo:Capability ;
+            sh:minCount 1 ;
+            sh:path eo:requires_capability ],
+        [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:path eo:involves_object ] ;
+            sh:path eo:status ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:path eo:updated_at ],
+        [ sh:in ( "constrained" "feasible" "infeasible" "rewrite" ) ;
+            sh:maxCount 1 ;
+            sh:path eo:verdict ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
     sh:targetClass eo:Task .
 
 eo:TelemetryMetricMetricCodeKeyUniqueShape a sh:NodeShape ;
@@ -638,17 +638,16 @@ eo:TelemetryMetricShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:double ;
-            sh:maxCount 1 ;
-            sh:path eo:min_value ],
-        [ sh:in ( "bool" "float" "int" ) ;
+    sh:property [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:path eo:value_type ],
-        [ sh:datatype xsd:integer ;
+            sh:path eo:created_at ],
+        [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:version ],
+            sh:path eo:deprecated ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:description ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
@@ -656,79 +655,80 @@ eo:TelemetryMetricShape a sh:NodeShape ;
         [ sh:datatype xsd:double ;
             sh:maxCount 1 ;
             sh:path eo:max_value ],
-        [ sh:datatype xsd:integer ;
-            sh:maxCount 1 ;
-            sh:minInclusive 1 ;
-            sh:path eo:retention_days ],
-        [ sh:datatype xsd:boolean ;
-            sh:maxCount 1 ;
-            sh:path eo:deprecated ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:description ],
-        [ sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:path eo:unit ],
+        [ sh:maxCount 1 ;
+            sh:nodeKind sh:IRI ;
+            sh:path eo:measures ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:metric_code ],
-        [ sh:datatype xsd:dateTime ;
+        [ sh:datatype xsd:double ;
             sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:created_at ],
-        [ sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:path eo:measures ],
+            sh:path eo:min_value ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 1 ;
+            sh:path eo:retention_days ],
         [ sh:datatype xsd:double ;
             sh:maxCount 1 ;
             sh:minInclusive 0 ;
             sh:path eo:sampling_hz ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path eo:unit ],
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
-            sh:path eo:updated_at ] ;
+            sh:path eo:updated_at ],
+        [ sh:in ( "bool" "float" "int" ) ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:value_type ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
     sh:targetClass eo:TelemetryMetric .
 
 eo:TelemetryPointShape a sh:NodeShape ;
     sh:closed true ;
     sh:ignoredProperties ( rdf:type ) ;
     sh:nodeKind sh:IRI ;
-    sh:property [ sh:datatype xsd:integer ;
-            sh:maxCount 1 ;
-            sh:minInclusive 0 ;
-            sh:path eo:version ],
-        [ sh:datatype xsd:double ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:value ],
-        [ sh:datatype xsd:dateTime ;
+    sh:property [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:created_at ],
-        [ sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:path eo:entity_ref ],
-        [ sh:datatype xsd:dateTime ;
-            sh:maxCount 1 ;
-            sh:minCount 1 ;
-            sh:path eo:time ],
         [ sh:datatype xsd:boolean ;
             sh:maxCount 1 ;
             sh:path eo:deprecated ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
+            sh:path eo:description ],
+        [ sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:path eo:metric_code ],
+            sh:nodeKind sh:IRI ;
+            sh:path eo:entity_ref ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
-            sh:path eo:description ],
+            sh:minCount 1 ;
+            sh:path eo:label ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:metric_code ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path eo:time ],
         [ sh:datatype xsd:dateTime ;
             sh:maxCount 1 ;
             sh:path eo:updated_at ],
-        [ sh:datatype xsd:string ;
+        [ sh:datatype xsd:double ;
             sh:maxCount 1 ;
             sh:minCount 1 ;
-            sh:path eo:label ] ;
+            sh:path eo:value ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minInclusive 0 ;
+            sh:path eo:version ] ;
     sh:targetClass eo:TelemetryPoint .
 
