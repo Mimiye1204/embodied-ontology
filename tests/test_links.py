@@ -16,8 +16,9 @@ class TestLinkCRUD:
         assert any(e["dst"] == "eo:robot/ti5" for e in edges)
 
     def test_link_replaces_single_value(self, crud):
-        crud.link("eo:task/carry-cup", "eo:robot/bx2", "assigned_to")
-        assert crud.get("eo:task/carry-cup")["assigned_to"] == "eo:robot/bx2"
+        # involves_object 单值：cup → door 覆盖
+        crud.link("eo:task/carry-cup", "eo:object/door", "involves_object")
+        assert crud.get("eo:task/carry-cup")["involves_object"] == "eo:object/door"
 
     def test_link_multivalue_dedup(self, crud):
         # requires_capability 已含 power-grasp，重复 link 不产生重复边
@@ -26,9 +27,9 @@ class TestLinkCRUD:
         assert caps.count("eo:cap/power-grasp") == 1
 
     def test_unlink(self, crud):
-        crud.link("eo:task/carry-cup", "eo:robot/bx2", "assigned_to")
-        crud.unlink("eo:task/carry-cup", "eo:robot/bx2", "assigned_to")
-        assert crud.get("eo:task/carry-cup").get("assigned_to") is None
+        crud.link("eo:task/carry-cup", "eo:object/door", "involves_object")
+        crud.unlink("eo:task/carry-cup", "eo:object/door", "involves_object")
+        assert crud.get("eo:task/carry-cup").get("involves_object") is None
 
     def test_link_rejects_dangling_target(self, crud):
         with pytest.raises(CRUDError):
@@ -77,7 +78,7 @@ class TestPathQueries:
 
     def test_part_of_robot(self, store):
         assert part_of_robot(store, "eo:part/ti5/six-axis-force", "eo:robot/ti5")
-        assert not part_of_robot(store, "eo:part/ti5/arm", "eo:robot/bx2")
+        assert not part_of_robot(store, "eo:part/ti5/arm", "eo:robot/nonexistent")
         assert robot_of_part(store, "eo:part/ti5/arm") == "eo:robot/ti5"
-        # 根部件本身
-        assert part_of_robot(store, "eo:part/bx2/head", "eo:robot/bx2")
+        # 根部件本身（arm 是 ti5 部件树根）
+        assert part_of_robot(store, "eo:part/ti5/arm", "eo:robot/ti5")

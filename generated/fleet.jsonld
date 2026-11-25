@@ -157,13 +157,6 @@
   },
   "@graph": [
     {
-      "id": "eo:cap/face-recognition",
-      "type": "Capability",
-      "code": "face-recognition",
-      "created_at": "2026-11-20T08:00:00+08:00",
-      "label": "人脸识别"
-    },
-    {
       "id": "eo:cap/force-control",
       "type": "Capability",
       "code": "force-control",
@@ -218,13 +211,6 @@
       "code": "sitting",
       "created_at": "2026-11-20T08:00:00+08:00",
       "label": "坐下"
-    },
-    {
-      "id": "eo:cap/speech",
-      "type": "Capability",
-      "code": "speech",
-      "created_at": "2026-11-20T08:00:00+08:00",
-      "label": "语音交互"
     },
     {
       "id": "eo:constraint/arm-load-limit",
@@ -313,10 +299,10 @@
       "type": "ActionLog",
       "action_type": "task.dispatch",
       "actor": "demo",
-      "created_at": "2026-11-25T03:09:07.412299+00:00",
+      "created_at": "2026-11-25T09:23:38.454287+00:00",
       "detail": "{\"task_id\": \"eo:task/carry-cup\"}",
       "label": "task.dispatch → eo:task/carry-cup",
-      "occurred_at": "2026-11-25T03:09:07.412299+00:00",
+      "occurred_at": "2026-11-25T09:23:38.454287+00:00",
       "result": "ok",
       "target": "eo:task/carry-cup"
     },
@@ -495,27 +481,6 @@
       "weight_kg": 2.0
     },
     {
-      "id": "eo:part/bx2/base",
-      "type": "BodyPart",
-      "created_at": "2026-11-20T08:00:00+08:00",
-      "dof": 0,
-      "health": "ok",
-      "label": "底盘",
-      "provides_capability": "eo:cap/locomotion"
-    },
-    {
-      "id": "eo:part/bx2/head",
-      "type": "BodyPart",
-      "created_at": "2026-11-20T08:00:00+08:00",
-      "dof": 2,
-      "health": "ok",
-      "label": "头部",
-      "provides_capability": [
-        "eo:cap/speech",
-        "eo:cap/face-recognition"
-      ]
-    },
-    {
       "id": "eo:part/ti5/arm",
       "type": "BodyPart",
       "created_at": "2026-11-20T08:00:00+08:00",
@@ -597,20 +562,6 @@
       "part_of": "eo:part/ti5/arm"
     },
     {
-      "id": "eo:robot/bx2",
-      "type": "Robot",
-      "created_at": "2026-11-20T08:00:00+08:00",
-      "label": "豹小秘2",
-      "model": "豹小秘2 服务机器人",
-      "serial": "BX2-001",
-      "status": "online",
-      "has_part": [
-        "eo:part/bx2/base",
-        "eo:part/bx2/head"
-      ],
-      "located_at": "eo:site/hq"
-    },
-    {
       "id": "eo:robot/ti5",
       "type": "Robot",
       "created_at": "2026-11-20T08:00:00+08:00",
@@ -648,16 +599,6 @@
       "requires_capability": "eo:cap/power-grasp"
     },
     {
-      "id": "eo:task/carry-cup-by-bx2",
-      "type": "Task",
-      "created_at": "2026-11-24T09:12:00+08:00",
-      "label": "端杯子（派豹小秘）",
-      "status": "pending",
-      "assigned_to": "eo:robot/bx2",
-      "involves_object": "eo:object/cup",
-      "requires_capability": "eo:cap/power-grasp"
-    },
-    {
       "id": "eo:task/carry-kettle",
       "type": "Task",
       "created_at": "2026-11-24T09:02:00+08:00",
@@ -689,19 +630,6 @@
       "requires_capability": [
         "eo:cap/power-grasp",
         "eo:cap/force-control"
-      ]
-    },
-    {
-      "id": "eo:task/guide-visitor",
-      "type": "Task",
-      "created_at": "2026-11-24T09:11:00+08:00",
-      "label": "语音引导访客",
-      "priority": 8,
-      "status": "dispatched",
-      "assigned_to": "eo:robot/bx2",
-      "requires_capability": [
-        "eo:cap/speech",
-        "eo:cap/face-recognition"
       ]
     },
     {

@@ -167,7 +167,7 @@ def run_selfcheck(data_path: str, robot_id: Optional[str] = "eo:robot/ti5") -> L
     c = Check("[9] 能力视图（机器人能力足迹）")
     view = build_capability_view(crud.store)
     robots = view["robots"]
-    c.sub(len(robots) == 2, f"机器人应 2，实 {len(robots)}")
+    c.sub(len(robots) == 1, f"机器人应 1，实 {len(robots)}")
     ti5 = next((r for r in robots if r["id"] == "eo:robot/ti5"), None)
     c.sub(ti5 is not None and any(cap["code"] == "power-grasp" for cap in ti5["capabilities"]),
           "ti5 能力足迹缺 power-grasp")

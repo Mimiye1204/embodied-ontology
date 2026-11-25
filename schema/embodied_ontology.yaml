@@ -419,7 +419,7 @@ slots:
     description: 出厂序列号（业务唯一键，对接设备台账）
   model:
     range: string
-    description: 型号（如 T170C / 豹小秘2）
+    description: 型号（如 T170C）
   firmware_version:
     range: string
     description: 固件版本

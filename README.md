@@ -1,6 +1,6 @@
 # 具身本体论引擎（Embodied Ontology Engine）
 
-多机器人编队的具身本体论工程实现（Schema v1.0.0）：
+面向 T170C 的具身本体论工程实现（Schema v1.1.0）：
 **LinkML 定义 Schema → SHACL 校验（L0+L1）→ JSON-LD 全域交换 → Neo4j 图存储 → 自研规则引擎（L2）→ TimescaleDB 时序库**。
 
 > 设计文档（先读这四份）：
@@ -19,7 +19,7 @@ schema/embodied_ontology.yaml （LinkML，单一事实来源，v1.0.0）
   ├─→ L1 形状（引用完整性自动生成 + domain.ttl 手写领域不变量）
   └─→ JSON-LD @context 自动推导（eo/jsonld/context.py）
        │
- 数据层 ABox：examples/fleet.json（2 机器人编队 57 实体）──Gate A SHACL──→ 图存储
+ 数据层 ABox：examples/fleet.json（T170C 51 实体）──Gate A SHACL──→ 图存储
        │                                              （写入前校验 L0+L1）
  存储层：GraphStore 接口 ── MemoryStore（本地） / Neo4jStore（生产，docs/02 规范）
        │
@@ -64,7 +64,7 @@ schema/embodied_ontology.yaml （LinkML，单一事实来源，v1.0.0）
 .venv/Scripts/python.exe cli.py get eo:robot/ti5
 .venv/Scripts/python.exe cli.py list --type Task
 .venv/Scripts/python.exe cli.py set eo:object/cup weight_kg 0.35
-.venv/Scripts/python.exe cli.py link eo:task/carry-cup eo:robot/bx2 assigned_to
+.venv/Scripts/python.exe cli.py link eo:task/carry-cup eo:object/door involves_object
 .venv/Scripts/python.exe cli.py create '{"id":"eo:object/pen","type":"Object","label":"笔","weight_kg":0.02,"surface":"dry","created_at":"2026-11-24T10:00:00+08:00"}'
 .venv/Scripts/python.exe cli.py delete eo:object/pen [--physical]   # 默认软删除(deprecated)
 .venv/Scripts/python.exe cli.py validate
@@ -72,7 +72,7 @@ schema/embodied_ontology.yaml （LinkML，单一事实来源，v1.0.0）
 
 ## 关键能力演示（demo 输出）
 
-- **编队可达性**：同一「端杯子」任务，派 TI5 → 可实现；派豹小秘2 → 不可达（能力提供者不在其部件树内）；「语音引导访客」派豹小秘2 → 可实现
+- **任务可达性**：任务→能力→部件覆盖 + 健康状态判定（抓鸡蛋依赖力控，六维力故障后不可达；端杯子走包握不受影响）
 - **约束库拦截**：满水壶（力矩 0.6 > 0.5）→ 先减负；箱子（力矩+负载双超）→ 底盘推行；坐下（无臀部位形）→ 改写任务意义；湿滑杯 → 力度 ×1.5
 - **模式库故障传播**：事件 → 模式 force-sensor-failure → 力控失效 → 抓鸡蛋/捏硬币失败；端杯子依赖隔离不受影响；反向根因回溯到六维力传感器
 - **归纳闭环**：力读数骤降 67% → 写回 surface=slippery → 规则重跑 → grip_factor=1.5 → JSON-LD 带出

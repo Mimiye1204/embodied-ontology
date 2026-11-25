@@ -49,7 +49,7 @@ def section(title: str) -> None:
 
 
 def main() -> None:
-    print("具身本体论引擎 · 端到端验证（Schema v1.0.0 · 双机器人编队）")
+    print("具身本体论引擎 · 端到端验证（Schema v1.1.0 · T170C 本体）")
     print("LinkML 定义 Schema · SHACL 校验(L0+L1) · JSON-LD 交换 · 图存储 · 规则引擎 · 时序库")
 
     # ---------------------------------------------------------------- 0. Schema
@@ -77,9 +77,9 @@ def main() -> None:
     neg_cases = []
     bad = _copy.deepcopy(entities)
     for e in bad:
-        if e["id"] == "eo:robot/bx2":
-            e["serial"] = "TI5-T170C-001"
-    neg_cases.append(("serial 重复（唯一键）", validate_entities(bad)[0]))
+        if e["id"] == "eo:cap/pour":
+            e["code"] = "power-grasp"
+    neg_cases.append(("code 重复（唯一键）", validate_entities(bad)[0]))
     bad = _copy.deepcopy(entities)
     for e in bad:
         if e["id"] == "eo:task/carry-cup":
@@ -119,8 +119,8 @@ def main() -> None:
         icon = VERDICT_ICON.get(r.verdict, "?")
         problems = f"   ← 原因：{'；'.join(r.problems)}" if r.problems else ""
         print(f"  {icon} {t.id}（{t.get('label')}）→ {r.verdict}{problems}")
-    print("\n  「语音引导访客」（派豹小秘2）完整证明链：")
-    for line in check_reachability(store, "eo:task/guide-visitor").proof:
+    print("\n  「抓鸡蛋」完整证明链：")
+    for line in check_reachability(store, "eo:task/grasp-egg").proof:
         print(f"      {line}")
 
     # ------------------------------------------------------------ 5. 动作拦截

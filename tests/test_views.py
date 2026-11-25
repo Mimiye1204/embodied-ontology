@@ -12,7 +12,7 @@ class TestCapabilityView:
         assert view["id"] == "cv:view/capability"
         assert view["ontology_version"] == "1.1.0"
         assert "generated_at" in view
-        assert {r["id"] for r in view["robots"]} == {"eo:robot/ti5", "eo:robot/bx2"}
+        assert {r["id"] for r in view["robots"]} == {"eo:robot/ti5"}
 
     def test_robot_capability_footprint(self, store):
         view = build_capability_view(store, robot_id="eo:robot/ti5")
@@ -61,7 +61,7 @@ class TestFilteredExport:
     def test_export_by_type(self, store):
         doc = export_jsonld(store, types=["Robot"])
         assert {e["type"] for e in doc["@graph"]} == {"Robot"}
-        assert len(doc["@graph"]) == 2  # ti5 + bx2
+        assert len(doc["@graph"]) == 1  # 仅 ti5
 
     def test_export_by_id_includes_references(self, store):
         doc = export_jsonld(store, ids=["eo:task/grasp-egg"])

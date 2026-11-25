@@ -83,10 +83,8 @@ class TestRuleActionBinding:
 class TestReachability:
     def test_verdicts(self, store):
         assert check_reachability(store, "eo:task/grasp-egg").verdict == "feasible"
-        assert check_reachability(store, "eo:task/guide-visitor").verdict == "feasible"
-        r = check_reachability(store, "eo:task/carry-cup-by-bx2")
-        assert r.verdict == "infeasible"
-        assert any("不属于指派机器人" in p for p in r.problems)
+        assert check_reachability(store, "eo:task/carry-cup").verdict == "feasible"
+        assert check_reachability(store, "eo:task/sit-down").verdict == "feasible"
 
 
 class TestFaultPropagation:

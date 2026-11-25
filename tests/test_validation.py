@@ -52,8 +52,8 @@ class TestL1Domain:
     def test_rejects_duplicate_unique_key(self, fleet_entities):
         def m(es):
             for e in es:
-                if e["id"] == "eo:robot/bx2":
-                    e["serial"] = "TI5-T170C-001"
+                if e["id"] == "eo:cap/pour":
+                    e["code"] = "power-grasp"
         ok, _ = validate_entities(_bad(fleet_entities, m))
         assert not ok
 
@@ -75,9 +75,15 @@ class TestL1Domain:
 
     def test_rejects_foreign_fault_part(self, fleet_entities):
         def m(es):
+            # 临时加第二台机器人，验证「故障部件必须属于上报机器人」领域形状
+            es.append({"id": "eo:robot/helper", "type": "Robot", "label": "辅助机器人",
+                       "serial": "HELPER-001", "has_part": ["eo:part/helper/base"],
+                       "created_at": "2026-11-20T08:00:00+08:00"})
+            es.append({"id": "eo:part/helper/base", "type": "BodyPart", "label": "底盘",
+                       "health": "ok", "created_at": "2026-11-20T08:00:00+08:00"})
             for e in es:
                 if e["id"] == "eo:event/fault-001":
-                    e["affects_bodypart"] = "eo:part/bx2/head"
+                    e["reported_by"] = "eo:robot/helper"  # 影响的 ti5 部件不属于 helper
         ok, _ = validate_entities(_bad(fleet_entities, m))
         assert not ok
 

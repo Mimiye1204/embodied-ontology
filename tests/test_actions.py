@@ -18,9 +18,11 @@ class TestDispatch:
         assert crud.get(result.audit_log_id)["action_type"] == "task.dispatch"
 
     def test_infeasible_dispatch(self, crud):
-        result = _reg(crud).execute("task.dispatch", actor="test", task_id="eo:task/carry-cup-by-bx2")
+        # 注入故障：六维力失效 → 抓鸡蛋依赖力控 → 不可达
+        crud.set_property("eo:part/ti5/six-axis-force", "health", "fault")
+        result = _reg(crud).execute("task.dispatch", actor="test", task_id="eo:task/grasp-egg")
         assert result.ok, "动作本身执行成功（业务结论是不可达）"
-        assert crud.get("eo:task/carry-cup-by-bx2")["status"] == "failed"
+        assert crud.get("eo:task/grasp-egg")["status"] == "failed"
         assert any("不可达" in m for m in result.messages)
 
 
