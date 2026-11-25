@@ -6,3 +6,6 @@ rdflib>=7            # RDF 图（JSON-LD 解析 / SHACL 数据图）
 pyld>=3              # rdflib 的 JSON-LD 插件依赖
 neo4j>=5             # 图存储（生产，Neo4j driver）
 psycopg[binary]>=3.1 # 时序存储（生产，TimescaleDB/PostgreSQL）
+
+# 开发/测试
+pytest>=8            # 单元测试（tests/ 套件）

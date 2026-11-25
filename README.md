@@ -44,8 +44,10 @@ schema/embodied_ontology.yaml （LinkML，单一事实来源，v1.0.0）
 # 端到端验证（9 段流水线，负例演示 SHACL 拦截）
 .venv/Scripts/python.exe demo.py
 
-# 测试（22 项：L0/L1 拦截、规则、可达性、故障、拦截、round-trip、时序）
-.venv/Scripts/python.exe tests/run_tests.py
+# 单元测试（65 项，按关注点分文件：对象/链路/规则/校验/动作/时序）
+.venv/Scripts/python.exe -m pytest tests/ -q          # 全量
+.venv/Scripts/python.exe -m pytest tests/test_rules.py -v   # 只看规则执行结果
+.venv/Scripts/python.exe tests/run_tests.py           # 等价入口
 
 # 浏览器可视化报告（本体图 + 正常/故障切换 + 推理面板）
 .venv/Scripts/python.exe report.py

@@ -313,10 +313,10 @@
       "type": "ActionLog",
       "action_type": "task.dispatch",
       "actor": "demo",
-      "created_at": "2026-11-25T02:14:40.532486+00:00",
+      "created_at": "2026-11-25T02:41:04.501584+00:00",
       "detail": "{\"task_id\": \"eo:task/carry-cup\"}",
       "label": "task.dispatch → eo:task/carry-cup",
-      "occurred_at": "2026-11-25T02:14:40.532486+00:00",
+      "occurred_at": "2026-11-25T02:41:04.501584+00:00",
       "result": "ok",
       "target": "eo:task/carry-cup"
     },
