@@ -31,7 +31,7 @@ class TestBinding:
         assert reg.snapshot("eo:part/ti5/six-axis-force").get("current_force") == 4.0
         assert reg.read("eo:robot/ti5", "no_such_slot") is None
 
-    def test_rejects_bad_binds_to(self, store):
-        store.get_node("eo:metric/battery").properties["binds_to"] = "no_such_slot"
-        reg = BindingRegistry(store, SqliteTelemetryStore(":memory:"))
+    def test_rejects_bad_binds_to(self, mutable_store):
+        mutable_store.get_node("eo:metric/battery").properties["binds_to"] = "no_such_slot"
+        reg = BindingRegistry(mutable_store, SqliteTelemetryStore(":memory:"))
         assert any("no_such_slot" in e for e in reg.validate_bindings())

@@ -8,6 +8,7 @@
 > - [docs/02-neo4j-mapping-spec.md](docs/02-neo4j-mapping-spec.md) — 节点-边映射规范（类型映射、约束/索引 DDL、批量加载、查询模板）
 > - [docs/03-shacl-framework.md](docs/03-shacl-framework.md) — 校验框架（三层架构、四道校验门、SPARQL 形状模式库）
 > - [docs/04-动力层设计.md](docs/04-动力层设计.md) — 时序属性绑定 · 规则引擎框架 · Action 绑定模型
+> - [docs/05-能力视图与平台对接.md](docs/05-能力视图与平台对接.md) — 输出给调度中台的能力视图 Schema + JSON-LD 过滤导出
 
 ## 架构
 
@@ -51,6 +52,10 @@ schema/embodied_ontology.yaml （LinkML，单一事实来源，v1.0.0）
 
 # 浏览器可视化报告（本体图 + 正常/故障切换 + 推理面板）
 .venv/Scripts/python.exe report.py
+
+# 本体能力视图（输出给调度中台的契约，纯 JSON / JSON-LD）
+.venv/Scripts/python.exe cli.py view --robot eo:robot/ti5
+.venv/Scripts/python.exe cli.py view --jsonld --out generated/view.jsonld
 
 # Object/Property/Link CRUD（所有写操作经 Gate A SHACL 校验，违规拒绝+回滚）
 .venv/Scripts/python.exe cli.py get eo:robot/ti5

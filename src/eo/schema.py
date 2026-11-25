@@ -13,17 +13,17 @@ from typing import List, Optional, Set
 _SCHEMA_FILE = os.path.abspath(os.path.join(
     os.path.dirname(__file__), "..", "..", "schema", "embodied_ontology.yaml"))
 
-_sv = None
+_sv_cache = {}
 
 
-def schema_view():
-    """惰性加载并缓存 SchemaView。"""
-    global _sv
-    if _sv is None:
+def schema_view(path: Optional[str] = None):
+    """惰性加载并缓存 SchemaView（默认主本体 Schema；path 可指向能力视图等其他 Schema）。"""
+    key = path or _SCHEMA_FILE
+    if key not in _sv_cache:
         from linkml_runtime.utils.schemaview import SchemaView
 
-        _sv = SchemaView(_SCHEMA_FILE)
-    return _sv
+        _sv_cache[key] = SchemaView(key)
+    return _sv_cache[key]
 
 
 def all_classes() -> List[str]:

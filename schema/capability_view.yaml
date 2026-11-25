@@ -1,0 +1,192 @@
+id: https://ontology.huilun.cn/capability-view
+name: CapabilityView
+title: 本体能力视图 Schema
+description: >-
+  输出给调度中台（robot-dispatch）的「本体能力视图」契约 —— 每台机器人当前
+  能力足迹的投影：能力清单（含健康状态）、适用约束、活跃故障、测点注册表。
+  由具身本体引擎（eo/views.py）从本体图投影生成；JSON Schema 由本文件经
+  linkml gen-json-schema 生成，供 Go 后端直接生成结构体反序列化。
+license: MIT
+version: 1.0.0
+prefixes:
+  cv: https://ontology.huilun.cn/capability-view/
+  linkml: https://w3id.org/linkml/
+  xsd: http://www.w3.org/2001/XMLSchema#
+default_prefix: cv
+default_range: string
+
+imports:
+  - linkml:types
+
+types:
+  timestamp:
+    typeof: datetime
+    description: 时间戳（ISO-8601）
+
+classes:
+  CapabilityView:
+    tree_root: true
+    description: 能力视图根文档（调度中台消费的契约对象）
+    slots:
+      - id
+      - generated_at
+      - ontology_version
+      - robots
+      - metrics
+
+  RobotCapability:
+    description: 单台机器人的能力足迹
+    slots:
+      - id
+      - serial
+      - model
+      - status
+      - capabilities
+      - constraints
+      - active_faults
+
+  CapabilityEntry:
+    description: 一条能力及其提供部件与健康判定
+    slots:
+      - code
+      - label
+      - part_ids
+      - healthy
+      - degraded
+
+  ConstraintEntry:
+    description: 适用于该机器人的一条约束
+    slots:
+      - code
+      - constraint_type
+      - expression
+      - threshold
+      - unit
+
+  FaultEntry:
+    description: 该机器人一条活跃故障事件摘要
+    slots:
+      - event_id
+      - mode_code
+      - severity
+      - status
+      - detected_at
+
+  MetricEntry:
+    description: 测点注册表条目（时序库合法键域）
+    slots:
+      - metric_code
+      - measures_entity
+      - binds_to
+      - unit
+      - value_type
+      - aggregation
+
+slots:
+  id:
+    identifier: true
+    range: string
+    required: true
+    description: 实体/文档标识（如 cv:view/capability、eo:robot/ti5）
+  generated_at:
+    range: timestamp
+    required: true
+    description: 视图生成时间
+  ontology_version:
+    range: string
+    required: true
+    description: 来源本体的 Schema 版本
+  robots:
+    range: RobotCapability
+    multivalued: true
+    inlined_as_list: true
+    required: true
+  metrics:
+    range: MetricEntry
+    multivalued: true
+    inlined_as_list: true
+    required: true
+
+  serial:
+    range: string
+    description: 出厂序列号
+  model:
+    range: string
+    description: 型号
+  status:
+    range: string
+    description: 状态（RobotStatus 枚举值）
+  capabilities:
+    range: CapabilityEntry
+    multivalued: true
+    inlined_as_list: true
+    required: true
+  constraints:
+    range: ConstraintEntry
+    multivalued: true
+    inlined_as_list: true
+  active_faults:
+    range: FaultEntry
+    multivalued: true
+    inlined_as_list: true
+
+  code:
+    range: string
+    description: 能力编码
+  label:
+    range: string
+    description: 人类可读名称
+  part_ids:
+    range: string
+    multivalued: true
+    description: 提供该能力的部件 id 列表
+  healthy:
+    range: boolean
+    required: true
+    description: 提供部件全部健康
+  degraded:
+    range: boolean
+    required: true
+    description: 提供部件存在降级（无故障）
+
+  constraint_type:
+    range: string
+    description: 约束类型（ConstraintType 枚举值）
+  expression:
+    range: string
+    description: 约束表达式
+  threshold:
+    range: float
+    description: 阈值
+  unit:
+    range: string
+    description: 单位
+
+  event_id:
+    range: string
+    description: 故障事件 id
+  mode_code:
+    range: string
+    description: 关联故障模式编码
+  severity:
+    range: string
+    description: 严重度（Severity 枚举值）
+  detected_at:
+    range: timestamp
+    description: 检测时间
+
+  metric_code:
+    range: string
+    description: 测点编码
+  measures_entity:
+    range: string
+    description: 测点测量对象（本体实体 id）
+  binds_to:
+    range: string
+    description: 绑定的动态属性槽
+  value_type:
+    range: string
+    description: 值类型（MetricValueType 枚举值）
+  aggregation:
+    range: string
+    description: 聚合算子（MetricAggregation 枚举值）

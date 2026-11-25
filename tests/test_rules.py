@@ -96,11 +96,11 @@ class TestFaultPropagation:
         assert impact.lost_capabilities == ["eo:cap/force-control"]
         assert set(impact.affected_tasks) == {"eo:task/grasp-egg", "eo:task/pinch-coin"}
 
-    def test_direct_propagation_and_root_cause(self, store):
-        impact = propagate_fault(store, "eo:part/ti5/dexterous-hand")
+    def test_direct_propagation_and_root_cause(self, mutable_store):
+        impact = propagate_fault(mutable_store, "eo:part/ti5/dexterous-hand")
         assert "eo:cap/power-grasp" in impact.lost_capabilities
-        store.get_node("eo:part/ti5/six-axis-force").properties["health"] = "fault"
-        assert root_cause(store, "eo:task/grasp-egg") == ["eo:part/ti5/six-axis-force"]
+        mutable_store.get_node("eo:part/ti5/six-axis-force").properties["health"] = "fault"
+        assert root_cause(mutable_store, "eo:task/grasp-egg") == ["eo:part/ti5/six-axis-force"]
 
 
 class TestInterception:

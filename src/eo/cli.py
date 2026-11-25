@@ -143,8 +143,30 @@ def cmd_validate(crud, args) -> int:
 
 def cmd_export(crud, args) -> int:
     path = args.out or os.path.join(ROOT, "generated", "current.jsonld")
-    crud.export_jsonld(path)
-    print(f"已导出 {path}（{len(crud.entities)} 个实体）")
+    types = args.types.split(",") if args.types else None
+    ids = args.ids.split(",") if args.ids else None
+    doc = crud.export_jsonld(path, types=types, ids=ids)
+    print(f"已导出 {path}（{len(doc['@graph'])} 个实体"
+          + (f"，types={types}" if types else "")
+          + (f"，ids 切片" if ids else "") + "）")
+    return 0
+
+
+def cmd_view(crud, args) -> int:
+    from .views import build_capability_view, view_as_jsonld
+    view = build_capability_view(crud.store, robot_id=args.robot)
+    if args.jsonld:
+        doc = view_as_jsonld(view)
+        out = json.dumps(doc, ensure_ascii=False, indent=2)
+    else:
+        out = json.dumps(view, ensure_ascii=False, indent=2)
+    if args.out:
+        os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
+        with open(args.out, "w", encoding="utf-8") as f:
+            f.write(out)
+        print(f"已导出能力视图 → {args.out}")
+    else:
+        print(out)
     return 0
 
 
@@ -223,7 +245,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = sub.add_parser("delete", help="删除实体")
     p.add_argument("id"); p.add_argument("--physical", action="store_true", help="物理删除（默认软删除）")
     sub.add_parser("validate", help="全量校验（Gate C）")
-    p = sub.add_parser("export", help="导出 JSON-LD"); p.add_argument("--out")
+    p = sub.add_parser("export", help="导出 JSON-LD（支持过滤切片）")
+    p.add_argument("--out")
+    p.add_argument("--types", help="只导出这些 ObjectType（逗号分隔）")
+    p.add_argument("--ids", help="只导出这些实体 id（含引用闭包）")
+    p = sub.add_parser("view", help="导出本体能力视图（给调度中台）")
+    p.add_argument("--robot", help="只含指定机器人")
+    p.add_argument("--jsonld", action="store_true", help="输出 JSON-LD（否则纯 JSON）")
+    p.add_argument("--out")
     sub.add_parser("action-list", help="列出受控动作（ActionType 注册表）")
     p = sub.add_parser("action", help="执行受控动作")
     p.add_argument("action"); p.add_argument("params", help="参数 JSON")
@@ -244,7 +273,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "set": cmd_set, "unset": cmd_unset, "link": cmd_link, "unlink": cmd_unlink,
         "delete": cmd_delete, "validate": cmd_validate, "export": cmd_export,
         "action": cmd_action, "action-list": cmd_action_list,
-        "intercept": cmd_intercept, "path": cmd_path,
+        "intercept": cmd_intercept, "path": cmd_path, "view": cmd_view,
     }
     return handlers[args.cmd](crud, args)
 

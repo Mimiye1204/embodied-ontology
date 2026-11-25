@@ -34,6 +34,12 @@ def store():
 
 
 @pytest.fixture
+def mutable_store():
+    """可改写的图存储副本（会改健康/绑定的测试用，避免污染 session 级 store）。"""
+    return load_json_file(MemoryStore(), str(DATA))
+
+
+@pytest.fixture
 def crud(fleet_entities):
     """CRUD 唯一写路径（Gate A）；函数级隔离，从只读清单深拷贝。"""
     c = OntologyCRUD()

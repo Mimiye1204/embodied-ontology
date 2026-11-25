@@ -37,9 +37,28 @@ def graph_to_entities(store: GraphStore) -> List[Dict[str, Any]]:
     return entities
 
 
-def export_jsonld(store: GraphStore, path: Optional[str] = None) -> Dict[str, Any]:
-    """图 → JSON-LD 文档；path 给定时落盘。"""
-    doc = to_jsonld_document(graph_to_entities(store))
+def export_jsonld(store: GraphStore, path: Optional[str] = None,
+                  types: Optional[List[str]] = None,
+                  ids: Optional[List[str]] = None) -> Dict[str, Any]:
+    """图 → JSON-LD 文档；path 给定时落盘。
+
+    支持过滤切片：
+      types —— 只导出这些 ObjectType
+      ids   —— 只导出这些实体 id（含其入边/出边引用的节点，保证切片自洽）
+    """
+    entities = graph_to_entities(store)
+    if types is not None:
+        allowed = set(types)
+        entities = [e for e in entities if e["type"] in allowed]
+    if ids is not None:
+        allowed_ids = set(ids)
+        referenced = {target for e in entities
+                      for slot in link_slots(e["type"])
+                      for target in (e[slot] if isinstance(e.get(slot), list) else [e[slot]]
+                                     if e.get(slot) else [])}
+        keep = allowed_ids | (referenced & {e["id"] for e in entities})
+        entities = [e for e in entities if e["id"] in keep]
+    doc = to_jsonld_document(entities)
     if path:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(doc, f, ensure_ascii=False, indent=2)

@@ -7,17 +7,71 @@
     "@vocab": "https://ontology.huilun.cn/embodied/",
     "id": "@id",
     "type": "@type",
-    "action_type": "eo:action_type",
-    "actor": "eo:actor",
-    "affects_bodypart": {
-      "@id": "eo:affects_bodypart",
+    "status": "eo:status",
+    "label": "eo:label",
+    "description": "eo:description",
+    "deprecated": "eo:deprecated",
+    "created_at": {
+      "@id": "eo:created_at",
+      "@type": "xsd:dateTime"
+    },
+    "updated_at": {
+      "@id": "eo:updated_at",
+      "@type": "xsd:dateTime"
+    },
+    "version": "eo:version",
+    "code": "eo:code",
+    "parent": {
+      "@id": "eo:parent",
       "@type": "@id"
     },
-    "affects_capability": {
-      "@id": "eo:affects_capability",
+    "serial": "eo:serial",
+    "model": "eo:model",
+    "firmware_version": "eo:firmware_version",
+    "located_at": {
+      "@id": "eo:located_at",
       "@type": "@id"
     },
-    "aggregation": "eo:aggregation",
+    "has_part": {
+      "@id": "eo:has_part",
+      "@type": "@id"
+    },
+    "part_of": {
+      "@id": "eo:part_of",
+      "@type": "@id"
+    },
+    "dof": "eo:dof",
+    "health": "eo:health",
+    "load_capacity_kg": "eo:load_capacity_kg",
+    "torque_limit_nm": "eo:torque_limit_nm",
+    "grip_force_n": "eo:grip_force_n",
+    "max_speed_ms": "eo:max_speed_ms",
+    "provides_capability": {
+      "@id": "eo:provides_capability",
+      "@type": "@id"
+    },
+    "payload_kg": "eo:payload_kg",
+    "object_code": "eo:object_code",
+    "has_handle": "eo:has_handle",
+    "weight_kg": "eo:weight_kg",
+    "surface": "eo:surface",
+    "is_fragile": "eo:is_fragile",
+    "has_thread": "eo:has_thread",
+    "is_container": "eo:is_container",
+    "priority": "eo:priority",
+    "deadline": {
+      "@id": "eo:deadline",
+      "@type": "xsd:dateTime"
+    },
+    "verdict": "eo:verdict",
+    "requires_capability": {
+      "@id": "eo:requires_capability",
+      "@type": "@id"
+    },
+    "involves_object": {
+      "@id": "eo:involves_object",
+      "@type": "@id"
+    },
     "assigned_to": {
       "@id": "eo:assigned_to",
       "@type": "@id"
@@ -26,134 +80,80 @@
       "@id": "eo:at_site",
       "@type": "@id"
     },
-    "binds_to": "eo:binds_to",
-    "code": "eo:code",
+    "constraint_type": "eo:constraint_type",
+    "expression": "eo:expression",
+    "threshold": "eo:threshold",
+    "unit": "eo:unit",
+    "suggested_rewrite": "eo:suggested_rewrite",
     "constrains": {
       "@id": "eo:constrains",
       "@type": "@id"
     },
-    "constraint_type": "eo:constraint_type",
-    "created_at": {
-      "@id": "eo:created_at",
-      "@type": "xsd:dateTime"
-    },
-    "current_angle": "eo:current_angle",
     "current_battery": "eo:current_battery",
     "current_force": "eo:current_force",
-    "deadline": {
-      "@id": "eo:deadline",
-      "@type": "xsd:dateTime"
+    "current_angle": "eo:current_angle",
+    "progress": "eo:progress",
+    "mode_code": "eo:mode_code",
+    "affects_bodypart": {
+      "@id": "eo:affects_bodypart",
+      "@type": "@id"
+    },
+    "affects_capability": {
+      "@id": "eo:affects_capability",
+      "@type": "@id"
     },
     "default_severity": "eo:default_severity",
-    "deprecated": "eo:deprecated",
-    "description": "eo:description",
-    "detail": "eo:detail",
-    "detected_at": {
-      "@id": "eo:detected_at",
-      "@type": "xsd:dateTime"
-    },
-    "dof": "eo:dof",
-    "entity_ref": {
-      "@id": "eo:entity_ref",
-      "@type": "@id"
-    },
-    "expression": "eo:expression",
-    "firmware_version": "eo:firmware_version",
-    "grip_force_n": "eo:grip_force_n",
-    "has_handle": "eo:has_handle",
-    "has_part": {
-      "@id": "eo:has_part",
-      "@type": "@id"
-    },
-    "has_thread": "eo:has_thread",
-    "health": "eo:health",
-    "involves_object": {
-      "@id": "eo:involves_object",
-      "@type": "@id"
-    },
-    "is_container": "eo:is_container",
-    "is_fragile": "eo:is_fragile",
-    "label": "eo:label",
-    "load_capacity_kg": "eo:load_capacity_kg",
-    "located_at": {
-      "@id": "eo:located_at",
-      "@type": "@id"
-    },
-    "max_speed_ms": "eo:max_speed_ms",
-    "max_value": "eo:max_value",
-    "measures": {
-      "@id": "eo:measures",
-      "@type": "@id"
-    },
-    "metric_code": "eo:metric_code",
-    "min_value": "eo:min_value",
-    "mode_code": "eo:mode_code",
-    "model": "eo:model",
-    "object_code": "eo:object_code",
-    "occurred_at": {
-      "@id": "eo:occurred_at",
-      "@type": "xsd:dateTime"
-    },
     "of_mode": {
       "@id": "eo:of_mode",
       "@type": "@id"
     },
-    "parent": {
-      "@id": "eo:parent",
-      "@type": "@id"
-    },
-    "part_of": {
-      "@id": "eo:part_of",
-      "@type": "@id"
-    },
-    "payload_kg": "eo:payload_kg",
-    "priority": "eo:priority",
-    "progress": "eo:progress",
-    "provides_capability": {
-      "@id": "eo:provides_capability",
-      "@type": "@id"
-    },
-    "reported_by": {
-      "@id": "eo:reported_by",
-      "@type": "@id"
-    },
-    "requires_capability": {
-      "@id": "eo:requires_capability",
-      "@type": "@id"
+    "severity": "eo:severity",
+    "detected_at": {
+      "@id": "eo:detected_at",
+      "@type": "xsd:dateTime"
     },
     "resolved_at": {
       "@id": "eo:resolved_at",
       "@type": "xsd:dateTime"
     },
-    "result": "eo:result",
-    "retention_days": "eo:retention_days",
-    "sampling_hz": "eo:sampling_hz",
-    "serial": "eo:serial",
-    "severity": "eo:severity",
-    "status": "eo:status",
-    "suggested_rewrite": "eo:suggested_rewrite",
-    "surface": "eo:surface",
+    "reported_by": {
+      "@id": "eo:reported_by",
+      "@type": "@id"
+    },
+    "action_type": "eo:action_type",
+    "actor": "eo:actor",
     "target": {
       "@id": "eo:target",
       "@type": "@id"
     },
-    "threshold": "eo:threshold",
+    "detail": "eo:detail",
+    "result": "eo:result",
+    "occurred_at": {
+      "@id": "eo:occurred_at",
+      "@type": "xsd:dateTime"
+    },
+    "metric_code": "eo:metric_code",
+    "sampling_hz": "eo:sampling_hz",
+    "retention_days": "eo:retention_days",
+    "binds_to": "eo:binds_to",
+    "aggregation": "eo:aggregation",
+    "window_seconds": "eo:window_seconds",
+    "measures": {
+      "@id": "eo:measures",
+      "@type": "@id"
+    },
+    "value_type": "eo:value_type",
+    "min_value": "eo:min_value",
+    "max_value": "eo:max_value",
+    "entity_ref": {
+      "@id": "eo:entity_ref",
+      "@type": "@id"
+    },
+    "value": "eo:value",
     "time": {
       "@id": "eo:time",
       "@type": "xsd:dateTime"
-    },
-    "torque_limit_nm": "eo:torque_limit_nm",
-    "unit": "eo:unit",
-    "updated_at": {
-      "@id": "eo:updated_at",
-      "@type": "xsd:dateTime"
-    },
-    "value": "eo:value",
-    "value_type": "eo:value_type",
-    "verdict": "eo:verdict",
-    "version": "eo:version",
-    "weight_kg": "eo:weight_kg",
-    "window_seconds": "eo:window_seconds"
+    }
   },
   "@graph": [
     {
@@ -313,10 +313,10 @@
       "type": "ActionLog",
       "action_type": "task.dispatch",
       "actor": "demo",
-      "created_at": "2026-11-25T02:41:04.501584+00:00",
+      "created_at": "2026-11-25T02:52:48.330861+00:00",
       "detail": "{\"task_id\": \"eo:task/carry-cup\"}",
       "label": "task.dispatch → eo:task/carry-cup",
-      "occurred_at": "2026-11-25T02:41:04.501584+00:00",
+      "occurred_at": "2026-11-25T02:52:48.330861+00:00",
       "result": "ok",
       "target": "eo:task/carry-cup"
     },
