@@ -341,6 +341,18 @@
     "created_at": "2026-11-20T08:00:00+08:00"
   },
   {
+    "id": "eo:constraint/grip-force-limit",
+    "type": "Constraint",
+    "label": "抓握力上限",
+    "constraint_type": "gripper",
+    "expression": "F = m·g·k_surface ≤ 40 N",
+    "threshold": 40.0,
+    "unit": "N",
+    "suggested_rewrite": "改用双手协同或增大夹持接触面积",
+    "constrains": "eo:part/ti5/dexterous-hand",
+    "created_at": "2026-11-20T08:00:00+08:00"
+  },
+  {
     "id": "eo:constraint/no-hip",
     "type": "Constraint",
     "label": "无臀部位形限制",

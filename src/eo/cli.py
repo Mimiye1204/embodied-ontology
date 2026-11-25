@@ -157,6 +157,30 @@ def cmd_action_list(crud, args) -> int:
     return 0
 
 
+def cmd_intercept(crud, args) -> int:
+    from .rules import intercept_report
+    report = intercept_report(crud.store, args.id)
+    if report.allowed:
+        print(f"✓ {args.id} 无拦截，放行执行")
+    else:
+        print(f"⛔ {args.id} 触发 {len(report.interceptions)} 项拦截：")
+        for h in report.interceptions:
+            print(f"  [{h.kind}] {h.reason}")
+            print(f"      → 改写：{h.rewrite}")
+    return 0
+
+
+def cmd_path(crud, args) -> int:
+    from .graph.traversal import format_path, shortest_path
+    path = shortest_path(crud.store, args.src, args.dst)
+    if path is None:
+        print(f"✗ {args.src} 与 {args.dst} 之间无路径")
+        return 1
+    print(f"最短路径（{len(path)} 条边）：")
+    print("  " + format_path(path))
+    return 0
+
+
 def cmd_action(crud, args) -> int:
     from .actions import build_registry
     reg = build_registry(crud)
@@ -204,6 +228,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = sub.add_parser("action", help="执行受控动作")
     p.add_argument("action"); p.add_argument("params", help="参数 JSON")
     p.add_argument("--actor", default="cli")
+    p = sub.add_parser("intercept", help="动作拦截检查（Gate B）"); p.add_argument("id")
+    p = sub.add_parser("path", help="两点最短路径查询")
+    p.add_argument("src"); p.add_argument("dst")
 
     args = parser.parse_args(argv)
     try:
@@ -217,6 +244,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "set": cmd_set, "unset": cmd_unset, "link": cmd_link, "unlink": cmd_unlink,
         "delete": cmd_delete, "validate": cmd_validate, "export": cmd_export,
         "action": cmd_action, "action-list": cmd_action_list,
+        "intercept": cmd_intercept, "path": cmd_path,
     }
     return handlers[args.cmd](crud, args)
 

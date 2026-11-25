@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from ..graph.base import GraphStore
+from ..graph.traversal import neighbors, traverse
 
 
 @dataclass
@@ -24,17 +25,13 @@ class ReachabilityResult:
 
 
 def part_of_robot(store: GraphStore, part_id: str, robot_id: str) -> bool:
-    """判断部件是否属于机器人（沿 part_of 链回溯到 has_part 根）。"""
-    roots = {p.id for p in store.out_neighbors(robot_id, "has_part")}
-    cur: Optional[str] = part_id
-    seen = set()
-    while cur and cur not in seen:
-        seen.add(cur)
-        if cur in roots:
-            return True
-        parents = store.out_neighbors(cur, "part_of")
-        cur = parents[0].id if parents else None
-    return False
+    """判断部件是否属于机器人。
+
+    part_of 边方向为「子 → 父」：沿 part_of 出边上溯到树根，看根是否挂在机器人 has_part 下。
+    """
+    roots = set(neighbors(store, robot_id, {"has_part"}, "out"))
+    # 部件即根，或其 part_of 出边闭包命中根，都属于该机器人
+    return part_id in roots or bool(traverse(store, part_id, {"part_of"}, "out") & roots)
 
 
 def robot_of_part(store: GraphStore, part_id: str) -> Optional[str]:

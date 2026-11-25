@@ -16,12 +16,16 @@ except Exception:
 
 from eo.graph import MemoryStore
 from eo.graph.loader import load_entities, load_json_file
+from eo.graph.traversal import (
+    ancestors, descendants, format_path, resolve, shortest_path, traverse,
+)
 from eo.jsonld import export_jsonld, from_jsonld_document
 from eo.crud import CRUDError, OntologyCRUD, ValidationError as CRUDValidationError
 from eo.actions import build_registry
 from eo.rules import (
     DOMAIN_RULES, check_reachability, forward_chain,
-    intercept_action, propagate_fault, propagate_fault_event, root_cause,
+    intercept_action, intercept_report, propagate_fault,
+    propagate_fault_event, root_cause,
 )
 from eo.rules.framework import RuleEngine, RuleContext, RuleSpec
 from eo.shacl import validate_entities
@@ -353,6 +357,70 @@ def test_crud_update_immutable_fields():
         assert False, "id 不可变更"
     except CRUDError:
         pass
+
+
+# ---------------------------------------------------------------- 图路径查询
+def test_traversal_basics():
+    store, _ = _load()
+    # part_of 边方向为「子→父」：沿出边上溯到父链（six-axis-force → wrist → arm）
+    up = traverse(store, "eo:part/ti5/six-axis-force", {"part_of"}, "out")
+    assert "eo:part/ti5/wrist" in up and "eo:part/ti5/arm" in up
+    # 机器人 has_part 出边 → 部件树根
+    roots = traverse(store, "eo:robot/ti5", {"has_part"}, "out")
+    assert "eo:part/ti5/arm" in roots
+
+
+def test_traversal_shortest_path():
+    store, _ = _load()
+    # 同方向路径：robot -has_part-> arm -provides_capability-> cap/pour
+    path = shortest_path(store, "eo:robot/ti5", "eo:cap/pour")
+    assert path is not None and len(path) == 2
+    text = format_path(path)
+    assert "HAS_PART" in text and "PROVIDES_CAPABILITY" in text
+
+
+def test_traversal_resolve():
+    """异构路径：任务 → 能力 ← 部件。"""
+    store, _ = _load()
+    parts = resolve(store, "eo:task/grasp-egg",
+                    [("out", "requires_capability"), ("in", "provides_capability")])
+    assert "eo:part/ti5/six-axis-force" in parts
+    assert "eo:part/ti5/dexterous-hand" in parts
+    # 反向：部件 → 能力 ← 任务
+    tasks = resolve(store, "eo:part/ti5/dexterous-hand",
+                    [("out", "provides_capability"), ("in", "requires_capability")])
+    assert "eo:task/carry-cup" in tasks
+
+
+def test_traversal_reachable_and_depth():
+    store, _ = _load()
+    assert traverse(store, "eo:task/grasp-egg", {"requires_capability"}) == {"eo:cap/power-grasp", "eo:cap/force-control"}
+    # 深度限制：1 跳只到能力，到不了部件
+    assert "eo:part/ti5/six-axis-force" not in traverse(
+        store, "eo:task/grasp-egg", None, "out", max_depth=1)
+
+
+# ---------------------------------------------------------------- 动作拦截
+def test_intercept_gripper():
+    store, _ = _load()
+    kinds = {h.kind for h in intercept_action(store, "eo:task/push-box")}
+    assert {"torque", "load", "gripper"} <= kinds, "箱子超重应同时触发力矩/负载/抓握力拦截"
+
+
+def test_intercept_report():
+    store, _ = _load()
+    report = intercept_report(store, "eo:task/push-box")
+    assert not report.allowed and report.interceptions
+    assert len(report.rewrites) == len(report.interceptions)
+    report2 = intercept_report(store, "eo:task/carry-cup")
+    assert report2.allowed and not report2.interceptions
+
+
+def test_intercept_pose_via_constraint():
+    store, _ = _load()
+    hits = intercept_action(store, "eo:task/sit-down")
+    pose = next(h for h in hits if h.kind == "pose")
+    assert "改写任务意义" in pose.rewrite
 
 
 # ---------------------------------------------------------------- 时序绑定

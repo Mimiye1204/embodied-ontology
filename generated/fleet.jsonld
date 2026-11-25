@@ -239,6 +239,18 @@
       "constrains": "eo:part/ti5/arm"
     },
     {
+      "id": "eo:constraint/grip-force-limit",
+      "type": "Constraint",
+      "constraint_type": "gripper",
+      "created_at": "2026-11-20T08:00:00+08:00",
+      "expression": "F = m·g·k_surface ≤ 40 N",
+      "label": "抓握力上限",
+      "suggested_rewrite": "改用双手协同或增大夹持接触面积",
+      "threshold": 40.0,
+      "unit": "N",
+      "constrains": "eo:part/ti5/dexterous-hand"
+    },
+    {
       "id": "eo:constraint/no-hip",
       "type": "Constraint",
       "constraint_type": "pose",
@@ -301,10 +313,10 @@
       "type": "ActionLog",
       "action_type": "task.dispatch",
       "actor": "demo",
-      "created_at": "2026-11-24T09:40:46.430960+00:00",
+      "created_at": "2026-11-25T02:14:40.532486+00:00",
       "detail": "{\"task_id\": \"eo:task/carry-cup\"}",
       "label": "task.dispatch → eo:task/carry-cup",
-      "occurred_at": "2026-11-24T09:40:46.430960+00:00",
+      "occurred_at": "2026-11-25T02:14:40.532486+00:00",
       "result": "ok",
       "target": "eo:task/carry-cup"
     },
