@@ -44,19 +44,22 @@ def export_jsonld(store: GraphStore, path: Optional[str] = None,
 
     支持过滤切片：
       types —— 只导出这些 ObjectType
-      ids   —— 只导出这些实体 id（含其入边/出边引用的节点，保证切片自洽）
+      ids   —— 只导出这些实体 id + 其直接引用（一跳）的节点（聚焦切片）
     """
     entities = graph_to_entities(store)
     if types is not None:
         allowed = set(types)
         entities = [e for e in entities if e["type"] in allowed]
     if ids is not None:
-        allowed_ids = set(ids)
-        referenced = {target for e in entities
-                      for slot in link_slots(e["type"])
-                      for target in (e[slot] if isinstance(e.get(slot), list) else [e[slot]]
-                                     if e.get(slot) else [])}
-        keep = allowed_ids | (referenced & {e["id"] for e in entities})
+        allowed = set(ids)
+        keep = set(ids)
+        for e in entities:
+            if e["id"] not in allowed:
+                continue
+            for slot in link_slots(e["type"]):
+                targets = e.get(slot)
+                if targets:
+                    keep.update(targets if isinstance(targets, list) else [targets])
         entities = [e for e in entities if e["id"] in keep]
     doc = to_jsonld_document(entities)
     if path:

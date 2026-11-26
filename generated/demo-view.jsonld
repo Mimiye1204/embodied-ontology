@@ -1,0 +1,241 @@
+{
+  "@context": {
+    "cv": "https://ontology.huilun.cn/capability-view/",
+    "linkml": "https://w3id.org/linkml/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "@vocab": "https://ontology.huilun.cn/capability-view/",
+    "id": "@id",
+    "type": "@type",
+    "generated_at": {
+      "@id": "cv:generated_at",
+      "@type": "xsd:dateTime"
+    },
+    "ontology_version": "cv:ontology_version",
+    "robots": {
+      "@id": "cv:robots",
+      "@type": "@id"
+    },
+    "metrics": {
+      "@id": "cv:metrics",
+      "@type": "@id"
+    },
+    "serial": "cv:serial",
+    "model": "cv:model",
+    "status": "cv:status",
+    "capabilities": {
+      "@id": "cv:capabilities",
+      "@type": "@id"
+    },
+    "constraints": {
+      "@id": "cv:constraints",
+      "@type": "@id"
+    },
+    "active_faults": {
+      "@id": "cv:active_faults",
+      "@type": "@id"
+    },
+    "code": "cv:code",
+    "label": "cv:label",
+    "part_ids": "cv:part_ids",
+    "healthy": "cv:healthy",
+    "degraded": "cv:degraded",
+    "constraint_type": "cv:constraint_type",
+    "expression": "cv:expression",
+    "threshold": "cv:threshold",
+    "unit": "cv:unit",
+    "event_id": "cv:event_id",
+    "mode_code": "cv:mode_code",
+    "severity": "cv:severity",
+    "detected_at": {
+      "@id": "cv:detected_at",
+      "@type": "xsd:dateTime"
+    },
+    "metric_code": "cv:metric_code",
+    "measures_entity": "cv:measures_entity",
+    "binds_to": "cv:binds_to",
+    "value_type": "cv:value_type",
+    "aggregation": "cv:aggregation"
+  },
+  "@graph": [
+    {
+      "id": "cv:view/capability",
+      "generated_at": "2026-11-26T01:37:47.846492+00:00",
+      "ontology_version": "1.1.0",
+      "robots": [
+        {
+          "id": "eo:robot/ti5",
+          "serial": "TI5-T170C-001",
+          "model": "T170C 轮式人形",
+          "status": "online",
+          "capabilities": [
+            {
+              "code": "force-control",
+              "label": "力控",
+              "part_ids": [
+                "eo:part/ti5/six-axis-force"
+              ],
+              "healthy": true,
+              "degraded": false,
+              "type": "CapabilityEntry"
+            },
+            {
+              "code": "locomotion",
+              "label": "移动",
+              "part_ids": [
+                "eo:part/ti5/base"
+              ],
+              "healthy": true,
+              "degraded": false,
+              "type": "CapabilityEntry"
+            },
+            {
+              "code": "pinch",
+              "label": "灵巧捏取",
+              "part_ids": [
+                "eo:part/ti5/dexterous-hand"
+              ],
+              "healthy": true,
+              "degraded": false,
+              "type": "CapabilityEntry"
+            },
+            {
+              "code": "pour",
+              "label": "倒水",
+              "part_ids": [
+                "eo:part/ti5/arm"
+              ],
+              "healthy": true,
+              "degraded": false,
+              "type": "CapabilityEntry"
+            },
+            {
+              "code": "power-grasp",
+              "label": "包握",
+              "part_ids": [
+                "eo:part/ti5/dexterous-hand"
+              ],
+              "healthy": true,
+              "degraded": false,
+              "type": "CapabilityEntry"
+            },
+            {
+              "code": "press",
+              "label": "按压",
+              "part_ids": [
+                "eo:part/ti5/dexterous-hand"
+              ],
+              "healthy": true,
+              "degraded": false,
+              "type": "CapabilityEntry"
+            },
+            {
+              "code": "push",
+              "label": "推",
+              "part_ids": [
+                "eo:part/ti5/arm",
+                "eo:part/ti5/base"
+              ],
+              "healthy": true,
+              "degraded": false,
+              "type": "CapabilityEntry"
+            },
+            {
+              "code": "sitting",
+              "label": "坐下",
+              "part_ids": [
+                "eo:part/ti5/leg"
+              ],
+              "healthy": true,
+              "degraded": false,
+              "type": "CapabilityEntry"
+            }
+          ],
+          "constraints": [
+            {
+              "code": "eo:constraint/wrist-torque-limit",
+              "constraint_type": "torque",
+              "expression": "τ = m·g·l ≤ 0.5 N·m（l=0.3 m）",
+              "threshold": 0.5,
+              "unit": "Nm",
+              "type": "ConstraintEntry"
+            },
+            {
+              "code": "eo:constraint/arm-load-limit",
+              "constraint_type": "load",
+              "expression": "m ≤ 3.0 kg",
+              "threshold": 3.0,
+              "unit": "kg",
+              "type": "ConstraintEntry"
+            },
+            {
+              "code": "eo:constraint/grip-force-limit",
+              "constraint_type": "gripper",
+              "expression": "F = m·g·k_surface ≤ 40 N",
+              "threshold": 40.0,
+              "unit": "N",
+              "type": "ConstraintEntry"
+            },
+            {
+              "code": "eo:constraint/no-hip",
+              "constraint_type": "pose",
+              "expression": "sitting 需臀部支撑；折叠腿无臀部位形",
+              "threshold": null,
+              "unit": "",
+              "type": "ConstraintEntry"
+            }
+          ],
+          "active_faults": [
+            {
+              "event_id": "eo:event/fault-001",
+              "mode_code": "force-sensor-failure",
+              "severity": "critical",
+              "status": "active",
+              "detected_at": "2026-11-24T10:30:00+08:00",
+              "type": "FaultEntry"
+            }
+          ],
+          "type": "RobotCapability"
+        }
+      ],
+      "metrics": [
+        {
+          "metric_code": "battery",
+          "measures_entity": "eo:robot/ti5",
+          "binds_to": "current_battery",
+          "unit": "%",
+          "value_type": "float",
+          "aggregation": "last",
+          "type": "MetricEntry"
+        },
+        {
+          "metric_code": "force_reading",
+          "measures_entity": "eo:part/ti5/six-axis-force",
+          "binds_to": "current_force",
+          "unit": "N",
+          "value_type": "float",
+          "aggregation": "last",
+          "type": "MetricEntry"
+        },
+        {
+          "metric_code": "joint_angle",
+          "measures_entity": "eo:part/ti5/wrist",
+          "binds_to": "current_angle",
+          "unit": "deg",
+          "value_type": "float",
+          "aggregation": "last",
+          "type": "MetricEntry"
+        },
+        {
+          "metric_code": "task_progress",
+          "measures_entity": "eo:task/carry-cup",
+          "binds_to": "progress",
+          "unit": "%",
+          "value_type": "float",
+          "aggregation": "last",
+          "type": "MetricEntry"
+        }
+      ],
+      "type": "CapabilityView"
+    }
+  ]
+}

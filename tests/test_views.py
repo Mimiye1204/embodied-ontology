@@ -67,6 +67,9 @@ class TestFilteredExport:
         doc = export_jsonld(store, ids=["eo:task/grasp-egg"])
         ids = {e["id"] for e in doc["@graph"]}
         assert "eo:task/grasp-egg" in ids
-        # 引用闭包：涉及的能力与物体一并带出
+        # 直接引用（一跳）：涉及的能力/物体/指派机器人一并带出
         assert "eo:cap/power-grasp" in ids and "eo:cap/force-control" in ids
         assert "eo:object/egg" in ids
+        assert "eo:robot/ti5" in ids
+        # 非直接引用（ti5 自己的 located_at）不越界带出
+        assert "eo:site/hq" not in ids

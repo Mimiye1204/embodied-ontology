@@ -248,7 +248,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = sub.add_parser("export", help="导出 JSON-LD（支持过滤切片）")
     p.add_argument("--out")
     p.add_argument("--types", help="只导出这些 ObjectType（逗号分隔）")
-    p.add_argument("--ids", help="只导出这些实体 id（含引用闭包）")
+    p.add_argument("--ids", help="只导出这些实体 id + 其直接引用（一跳）")
     p = sub.add_parser("view", help="导出本体能力视图（给调度中台）")
     p.add_argument("--robot", help="只含指定机器人")
     p.add_argument("--jsonld", action="store_true", help="输出 JSON-LD（否则纯 JSON）")

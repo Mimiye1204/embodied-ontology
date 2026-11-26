@@ -220,6 +220,8 @@ class OntologyCRUD:
         """Gate C/D：当前全量状态的校验。"""
         return validate_entities_structured(list(self.entities.values()))
 
-    def export_jsonld(self, path: Optional[str] = None) -> Dict[str, Any]:
-        """导出当前状态为 JSON-LD 文档。"""
-        return export_jsonld(self.store, path)
+    def export_jsonld(self, path: Optional[str] = None,
+                      types: Optional[List[str]] = None,
+                      ids: Optional[List[str]] = None) -> Dict[str, Any]:
+        """导出当前状态为 JSON-LD 文档（支持 types/ids 过滤切片）。"""
+        return export_jsonld(self.store, path, types=types, ids=ids)
