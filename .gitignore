@@ -13,3 +13,6 @@ state/
 # IDE
 .vscode/
 .idea/
+
+# 演示临时产物
+generated/demo-*
