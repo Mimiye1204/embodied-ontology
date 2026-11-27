@@ -30,6 +30,7 @@ classes:
     slots:
       - id
       - generated_at
+      - view_schema_version
       - ontology_version
       - robots
       - metrics
@@ -92,6 +93,10 @@ slots:
     range: timestamp
     required: true
     description: 视图生成时间
+  view_schema_version:
+    range: string
+    required: true
+    description: 能力视图契约版本（本文件 version 字段，消费者据此判断解析契约）
   ontology_version:
     range: string
     required: true

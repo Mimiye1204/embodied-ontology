@@ -72,11 +72,16 @@
                         "$ref": "#/$defs/RobotCapability"
                     },
                     "type": "array"
+                },
+                "view_schema_version": {
+                    "description": "\u80fd\u529b\u89c6\u56fe\u5951\u7ea6\u7248\u672c\uff08\u672c\u6587\u4ef6 version \u5b57\u6bb5\uff0c\u6d88\u8d39\u8005\u636e\u6b64\u5224\u65ad\u89e3\u6790\u5951\u7ea6\uff09",
+                    "type": "string"
                 }
             },
             "required": [
                 "id",
                 "generated_at",
+                "view_schema_version",
                 "ontology_version",
                 "robots",
                 "metrics"
@@ -313,11 +318,16 @@
                 "$ref": "#/$defs/RobotCapability"
             },
             "type": "array"
+        },
+        "view_schema_version": {
+            "description": "\u80fd\u529b\u89c6\u56fe\u5951\u7ea6\u7248\u672c\uff08\u672c\u6587\u4ef6 version \u5b57\u6bb5\uff0c\u6d88\u8d39\u8005\u636e\u6b64\u5224\u65ad\u89e3\u6790\u5951\u7ea6\uff09",
+            "type": "string"
         }
     },
     "required": [
         "id",
         "generated_at",
+        "view_schema_version",
         "ontology_version",
         "robots",
         "metrics"

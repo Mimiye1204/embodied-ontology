@@ -20,6 +20,7 @@ from .schema import schema_view
 
 VIEW_SCHEMA = os.path.abspath(os.path.join(
     os.path.dirname(__file__), "..", "..", "schema", "capability_view.yaml"))
+VIEW_SCHEMA_VERSION = "1.0.0"   # 能力视图契约版本（capability_view.yaml 的 version）
 ONTOLOGY_VERSION = "1.1.0"
 
 # JSON-LD 类型注入：嵌套对象在 JSON-LD 里需要 @type
@@ -126,6 +127,7 @@ def build_capability_view(
     return {
         "id": "cv:view/capability",
         "generated_at": generated_at or _now_iso(),
+        "view_schema_version": VIEW_SCHEMA_VERSION,
         "ontology_version": ontology_version,
         "robots": robot_entries,
         "metrics": sorted(metrics, key=lambda e: e["metric_code"]),

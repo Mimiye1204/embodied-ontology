@@ -11,15 +11,36 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ..graph.base import GraphStore
-from ..schema import all_classes, all_slots, default_prefix_iri, default_prefix_name, link_slots
+from ..schema import all_classes, all_slots, default_prefix_iri, default_prefix_name, link_slots, schema_view
 from .context import build_context
 
 CONTEXT = build_context()
 
+# 交换格式版本：JSON-LD 文档的序列化契约版本（与本体 Schema 版本解耦）
+EXCHANGE_VERSION = "1.0"
 
-def to_jsonld_document(entities: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """实体 dict 列表 → JSON-LD 文档（@context 由 LinkML Schema 推导）。"""
-    return {"@context": CONTEXT, "@graph": entities}
+
+def _ontology_version() -> str:
+    """来源本体的 Schema 版本（读 LinkML schema 的 version 字段）。"""
+    try:
+        return str(schema_view().schema.version)
+    except Exception:
+        return "unknown"
+
+
+def to_jsonld_document(entities: List[Dict[str, Any]],
+                       ontology_version: Optional[str] = None) -> Dict[str, Any]:
+    """实体 dict 列表 → JSON-LD 文档。
+
+    顶层携带 exchange_version（交换格式版本）与 ontology_version（本体 Schema 版本），
+    消费者据此判断解析契约与语义契约是否匹配；二者只挂文档节点，不进 @graph，不影响 round-trip。
+    """
+    return {
+        "@context": CONTEXT,
+        "exchange_version": EXCHANGE_VERSION,
+        "ontology_version": ontology_version or _ontology_version(),
+        "@graph": entities,
+    }
 
 
 def graph_to_entities(store: GraphStore) -> List[Dict[str, Any]]:

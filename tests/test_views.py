@@ -10,6 +10,7 @@ class TestCapabilityView:
     def test_root_structure(self, store):
         view = build_capability_view(store)
         assert view["id"] == "cv:view/capability"
+        assert view["view_schema_version"] == "1.0.0"   # 契约版本字段
         assert view["ontology_version"] == "1.1.0"
         assert "generated_at" in view
         assert {r["id"] for r in view["robots"]} == {"eo:robot/ti5"}

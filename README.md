@@ -3,12 +3,14 @@
 面向 T170C 的具身本体论工程实现（Schema v1.1.0）：
 **LinkML 定义 Schema → SHACL 校验（L0+L1）→ JSON-LD 全域交换 → Neo4j 图存储 → 自研规则引擎（L2）→ TimescaleDB 时序库**。
 
-> 设计文档（先读这四份）：
+> 设计文档（先读这七份）：
 > - [docs/01-linkml-schema-design.md](docs/01-linkml-schema-design.md) — Schema 设计（13 个 ObjectType、ID 规范、ADR、演进策略）
 > - [docs/02-neo4j-mapping-spec.md](docs/02-neo4j-mapping-spec.md) — 节点-边映射规范（类型映射、约束/索引 DDL、批量加载、查询模板）
 > - [docs/03-shacl-framework.md](docs/03-shacl-framework.md) — 校验框架（三层架构、四道校验门、SPARQL 形状模式库）
 > - [docs/04-动力层设计.md](docs/04-动力层设计.md) — 时序属性绑定 · 规则引擎框架 · Action 绑定模型
 > - [docs/05-能力视图与平台对接.md](docs/05-能力视图与平台对接.md) — 输出给调度中台的能力视图 Schema + JSON-LD 过滤导出
+> - [docs/06-平台接口对齐.md](docs/06-平台接口对齐.md) — 平台 REST API 目录 + 本体→平台映射 + 遥测桥接
+> - [docs/07-契约登记.md](docs/07-契约登记.md) — 六个对外契约的版本/变更历史/兼容性承诺登记表
 
 ## 架构
 
