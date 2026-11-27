@@ -195,6 +195,24 @@ def run_selfcheck(data_path: str, robot_id: Optional[str] = "eo:robot/ti5") -> L
     c.detail = f"视图能力 {len(view_caps)} == 图能力 {len(graph_caps)}；故障依赖隔离正确"
     results.append(c)
 
+    # ------------------------------------------------------ 11. JSON-LD 校验 + 仿真消费
+    c = Check("[11] JSON-LD 校验 + 仿真可消费（round-trip → 重建 → 规则同推）")
+    from .jsonld import validate_jsonld
+    report = validate_jsonld(crud.store)
+    c.sub(report.conforms, str(report.violations[0]) if report.violations else "")
+    # 重导入 → 规则引擎推出等价关键事实
+    re_entities = from_jsonld_document(export_jsonld(crud.store))
+    re_crud = OntologyCRUD()
+    re_crud.load(re_entities)
+    re_eng = RuleEngine(re_crud.store)
+    re_eng.add_rules(DOMAIN_RULES)
+    re_eng.run()
+    c.sub(("eo:task/carry-kettle", "over_torque") in re_eng.facts,
+          "重导入后规则未推出 over_torque")
+    c.passed = all(c.checks)
+    c.detail = f"导出 {len(crud.entities)} 实体 → 校验通过 → 重导入后规则同推"
+    results.append(c)
+
     return results
 
 

@@ -22,6 +22,8 @@ def main():
     parser.add_argument("--scenario", default="slip_loop", help="场景名（--list 查看）")
     parser.add_argument("--steps", type=int, default=None, help="覆盖场景时长（秒/步）")
     parser.add_argument("--out", default=os.path.join(ROOT, "sim", "outputs"), help="产物目录")
+    parser.add_argument("--data", default=os.path.join(ROOT, "examples", "fleet.json"),
+                        help="世界数据（.json 实体清单 / .jsonld JSON-LD 文档）")
     parser.add_argument("--list", action="store_true", help="列出场景")
     args = parser.parse_args()
 
@@ -38,7 +40,7 @@ def main():
 
     engine = SimulationEngine(
         scenario=cls(),
-        data_path=os.path.join(ROOT, "examples", "fleet.json"),
+        data_path=args.data,
         outputs=args.out,
     )
     engine.run(steps=args.steps)

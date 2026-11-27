@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 
 from eo.actions import build_registry
 from eo.crud import OntologyCRUD, ValidationError as GateAError
+from eo.io import load_entities_file
 from eo.jsonld import export_jsonld
 from eo.rules import DOMAIN_RULES, check_reachability, intercept_action
 from eo.rules.framework import RuleEngine
@@ -39,8 +40,8 @@ class SimulationEngine:
         os.makedirs(outputs, exist_ok=True)
 
         # ---- Gate A：世界数据入库（唯一写路径 OntologyCRUD） ----
-        with open(data_path, encoding="utf-8") as f:
-            entities = json.load(f)
+        # 支持 .json（原始实体清单）与 .jsonld（JSON-LD 文档，自动 round-trip）
+        entities = load_entities_file(data_path)
         self.crud = OntologyCRUD()
         try:
             self.crud.load(entities)

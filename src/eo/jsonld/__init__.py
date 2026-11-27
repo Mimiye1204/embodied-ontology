@@ -8,6 +8,7 @@ from .exchange import (
     to_rdf_graph,
     from_jsonld_document,
 )
+from .validate import validate_jsonld, validate_jsonld_document
 
 __all__ = [
     "build_context",
@@ -17,4 +18,6 @@ __all__ = [
     "export_jsonld",
     "to_rdf_graph",
     "from_jsonld_document",
+    "validate_jsonld",
+    "validate_jsonld_document",
 ]

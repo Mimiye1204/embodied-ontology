@@ -141,6 +141,13 @@ def cmd_validate(crud, args) -> int:
     return 0 if report.conforms else 1
 
 
+def cmd_jsonld_validate(crud, args) -> int:
+    from .jsonld import validate_jsonld
+    report = validate_jsonld(crud.store, types=args.types, ids=args.ids)
+    print(report)
+    return 0 if report.conforms else 1
+
+
 def cmd_export(crud, args) -> int:
     path = args.out or os.path.join(ROOT, "generated", "current.jsonld")
     types = args.types.split(",") if args.types else None
@@ -282,6 +289,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = sub.add_parser("delete", help="删除实体")
     p.add_argument("id"); p.add_argument("--physical", action="store_true", help="物理删除（默认软删除）")
     sub.add_parser("validate", help="全量校验（Gate C）")
+    p = sub.add_parser("jsonld-validate", help="JSON-LD 输出校验（结构+round-trip+SHACL）")
+    p.add_argument("--types")
+    p.add_argument("--ids")
     p = sub.add_parser("export", help="导出 JSON-LD（支持过滤切片）")
     p.add_argument("--out")
     p.add_argument("--types", help="只导出这些 ObjectType（逗号分隔）")
@@ -316,7 +326,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     handlers = {
         "get": cmd_get, "list": cmd_list, "create": cmd_create, "update": cmd_update,
         "set": cmd_set, "unset": cmd_unset, "link": cmd_link, "unlink": cmd_unlink,
-        "delete": cmd_delete, "validate": cmd_validate, "export": cmd_export,
+        "delete": cmd_delete, "validate": cmd_validate, "jsonld-validate": cmd_jsonld_validate, "export": cmd_export,
         "action": cmd_action, "action-list": cmd_action_list,
         "intercept": cmd_intercept, "path": cmd_path, "view": cmd_view,
         "platform-telemetry": cmd_platform_telemetry,
