@@ -273,6 +273,17 @@ def _create_entity(ctx: ActionContext, **p: Any) -> ActionResult:
                         patches=[entity])
 
 
+# 内建动作 handler 按名查找（硬件蓝图/其他声明式来源据此绑定 Action）
+HANDLER_BY_NAME = {
+    "task.dispatch": _dispatch_task,
+    "task.reassign": _reassign_task,
+    "task.cancel": _cancel_task,
+    "fault.report": _report_fault,
+    "knowledge.writeback": _writeback,
+    "entity.create": _create_entity,
+}
+
+
 def build_registry(crud: OntologyCRUD, rules: Optional[Any] = None,
                    now: Optional[Callable[[], str]] = None,
                    sink: Optional[Callable[[str, str], None]] = None) -> ActionRegistry:

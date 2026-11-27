@@ -152,6 +152,24 @@ def cmd_export(crud, args) -> int:
     return 0
 
 
+def cmd_hardware_build(crud, args) -> int:
+    """硬件蓝图 → 本体 Object/Link/绑定 Action 自动生成（Gate A 校验）。"""
+    from .hardware import build_from_blueprint, load_blueprint
+
+    bp = load_blueprint(args.blueprint)
+    hw_crud, registry = build_from_blueprint(bp)
+    types: dict = {}
+    for n in hw_crud.store.nodes():
+        types[n.type] = types.get(n.type, 0) + 1
+    print(f"✓ 硬件蓝图 → 本体：{len(hw_crud.entities)} 实体（{types}），"
+          f"{len(hw_crud.store.edges())} 条 Link")
+    print(f"  绑定 Action：{', '.join(sorted(registry.actions))}")
+    if args.out:
+        hw_crud.export_jsonld(args.out)
+        print(f"  已导出 → {args.out}")
+    return 0
+
+
 def cmd_view(crud, args) -> int:
     from .views import build_capability_view, view_as_jsonld
     view = build_capability_view(crud.store, robot_id=args.robot)
@@ -281,8 +299,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("src"); p.add_argument("dst")
     p = sub.add_parser("platform-telemetry", help="本体 → 平台遥测桥接（docs/06）")
     p.add_argument("--robot", default="eo:robot/ti5")
+    p = sub.add_parser("hardware-build", help="硬件蓝图 → 本体的自动生成")
+    p.add_argument("--blueprint", default="hardware/ti5.yaml", help="硬件蓝图文件")
+    p.add_argument("--out")
 
     args = parser.parse_args(argv)
+    # hardware-build 从蓝图独立建本体，不依赖 state 文件
+    if args.cmd == "hardware-build":
+        return cmd_hardware_build(None, args)
     try:
         crud = _load(args)
     except ValidationError as e:
@@ -296,6 +320,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "action": cmd_action, "action-list": cmd_action_list,
         "intercept": cmd_intercept, "path": cmd_path, "view": cmd_view,
         "platform-telemetry": cmd_platform_telemetry,
+        "hardware-build": cmd_hardware_build,
     }
     return handlers[args.cmd](crud, args)
 

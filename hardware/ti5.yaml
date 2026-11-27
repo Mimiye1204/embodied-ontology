@@ -1,0 +1,104 @@
+# ============================================================================
+# T170C 硬件方案（硬件蓝图 → 自动生成本体 Object / Link / 绑定 Action）
+# 生成器：eo/hardware.py（generate_entities / generate_registry / build_from_blueprint）
+# 用法：cli.py hardware-build --file hardware/ti5.yaml
+# ============================================================================
+
+robot:
+  id: ti5
+  serial: TI5-T170C-001
+  model: T170C 轮式人形
+  status: online
+
+# 能力注册表（部件 capabilities 引用这里的 code）
+capabilities:
+  - {code: power-grasp, label: 包握}
+  - {code: pinch, label: 灵巧捏取}
+  - {code: force-control, label: 力控}
+  - {code: pour, label: 倒水}
+  - {code: press, label: 按压}
+  - {code: push, label: 推}
+  - {code: locomotion, label: 移动}
+  - {code: sitting, label: 坐下}
+
+# 部件树：children 嵌套 = part_of；capabilities = provides_capability；constraints = constrains
+parts:
+  - {id: head, label: 头部, dof: 3}
+
+  - id: arm
+    label: 手臂
+    dof: 7
+    capabilities: [pour, push]
+    constraints:
+      - {code: arm-load-limit, type: load, threshold: 3.0, unit: kg,
+         expression: "m ≤ 3.0 kg", rewrite: "改用底盘推行，或分解为多次搬运"}
+    children:
+      - id: wrist
+        label: 腕关节
+        constraints:
+          - {code: wrist-torque-limit, type: torque, threshold: 0.5, unit: Nm,
+             expression: "τ = m·g·l ≤ 0.5 N·m（l=0.3 m）",
+             rewrite: "先减轻负载（容器可倒水）或缩短力臂/双手协作"}
+        children:
+          - id: six-axis-force
+            label: 六维力传感器
+            capabilities: [force-control]
+      - id: dexterous-hand
+        label: 灵巧手
+        dof: 6
+        grip_force_n: 40.0
+        capabilities: [power-grasp, pinch, press]
+        constraints:
+          - {code: grip-force-limit, type: gripper, threshold: 40.0, unit: N,
+             expression: "F = m·g·k_surface ≤ 40 N", rewrite: "改用双手协同或增大夹持接触面积"}
+
+  - {id: waist, label: 腰部, dof: 3}
+
+  - id: leg
+    label: 折叠腿
+    dof: 2
+    capabilities: [sitting]
+    constraints:
+      - {code: no-hip, type: pose,
+         expression: "sitting 需臀部支撑；折叠腿无臀部位形",
+         rewrite: "改写任务意义：不做「坐下」，改为「靠近并语音指引」"}
+
+  - id: base
+    label: 轮式底盘
+    dof: 0
+    capabilities: [locomotion, push]
+
+# 绑定 Action（handler 引用内建动作；params/targets/target_param 决定绑定校验）
+actions:
+  - name: task.dispatch
+    handler: task.dispatch
+    description: 下发任务：可达性 + 拦截 → 状态迁移
+    params: {task_id: str}
+    targets: [Task]
+    target_param: task_id
+  - name: task.reassign
+    handler: task.reassign
+    description: 改派任务到机器人
+    params: {task_id: str, robot_id: str}
+    targets: [Task]
+    target_param: task_id
+  - name: task.cancel
+    handler: task.cancel
+    description: 取消任务（终态保护）
+    params: {task_id: str}
+    targets: [Task]
+    target_param: task_id
+  - name: fault.report
+    handler: fault.report
+    description: 按故障模式库上报故障
+    params: {mode_id: str}
+    targets: [FaultMode]
+    target_param: mode_id
+  - name: knowledge.writeback
+    handler: knowledge.writeback
+    description: 归纳写回（受控更新实体属性）
+    params: {entity_id: str, patch: dict}
+  - name: entity.create
+    handler: entity.create
+    description: 受控新建实体
+    params: {entity: dict}
