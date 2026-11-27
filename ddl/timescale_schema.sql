@@ -1,9 +1,17 @@
 -- ============================================================================
--- 具身本体论 · 时序库 DDL（TimescaleDB）
+-- 具身本体论 · 时序库 DDL（TimescaleDB）—— 当前完整快照
 -- 时序数据通过 entity_ref 外键关联本体图实体（Neo4j 节点 .id / JSON-LD @id）
+-- 增量变更走 ddl/migrations/，本快照同步到最新状态（见 ddl/MIGRATIONS.md）
 -- ============================================================================
 
 CREATE EXTENSION IF NOT EXISTS timescaledb;
+
+-- 迁移版本登记表
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    version     INT PRIMARY KEY,
+    description TEXT NOT NULL,
+    applied_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
 CREATE TABLE IF NOT EXISTS telemetry (
     time       TIMESTAMPTZ       NOT NULL,  -- 采样时间（hypertable 分区键）
@@ -17,6 +25,10 @@ SELECT create_hypertable('telemetry', 'time', if_not_exists => TRUE);
 -- 「外键关联」查询路径：按实体 + 测点 + 时间窗取序列
 CREATE INDEX IF NOT EXISTS idx_telemetry_entity_metric_time
     ON telemetry (entity_ref, metric, time DESC);
+
+INSERT INTO schema_migrations (version, description)
+VALUES (1, 'init: telemetry hypertable + entity/metric/time 复合索引')
+ON CONFLICT (version) DO NOTHING;
 
 -- 保留策略（示例：原始数据保留 30 天，之后压缩/降采样，按需启用）
 -- SELECT add_retention_policy('telemetry', INTERVAL '30 days');

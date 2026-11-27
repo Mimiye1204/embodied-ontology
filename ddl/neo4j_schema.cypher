@@ -1,8 +1,9 @@
 // ============================================================================
-// 具身本体论 · 图库 DDL（Neo4j）—— 随 Schema v1.0.0 维护
+// 具身本体论 · 图库 DDL（Neo4j）—— 随 Schema v1.1.0 维护 · 当前完整快照
 // 映射规范：docs/02-neo4j-mapping-spec.md（节点-边映射、类型映射、加载模板）
 // 节点：(:Entity:<Class> {id, entity_type, ...props})，id = 紧凑 IRI
 // 边  ：UPPER_SNAKE_CASE(Link 槽名)，方向 = domain → range
+// 增量变更走 ddl/migrations/，本快照同步到最新状态（见 ddl/MIGRATIONS.md）
 // ============================================================================
 
 // ----- 全局唯一 id（:Entity 标签 + 唯一约束 = 跨类型唯一） -----
@@ -25,6 +26,11 @@ CREATE INDEX idx_task_deadline     IF NOT EXISTS FOR (n:Task)       ON (n.deadli
 CREATE INDEX idx_bodypart_health   IF NOT EXISTS FOR (n:BodyPart)   ON (n.health);
 CREATE INDEX idx_faultevent_time   IF NOT EXISTS FOR (n:FaultEvent) ON (n.detected_at);
 CREATE INDEX idx_actionlog_time    IF NOT EXISTS FOR (n:ActionLog)  ON (n.occurred_at);
+
+// 迁移版本登记
+MERGE (m:SchemaMigration {version: 1})
+  SET m.description = 'init: 全局唯一 id + 业务唯一键约束 + 热属性索引',
+      m.applied_at = datetime();
 
 // ============================================================================
 // 常用遍历（图推理 = 遍历 + 规则，详见 docs/02 §7）
