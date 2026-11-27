@@ -270,6 +270,24 @@ def cmd_path(crud, args) -> int:
     return 0
 
 
+def cmd_root_cause(crud, args) -> int:
+    from .reasoning import trace_root_cause
+    report = trace_root_cause(crud.store, args.id)
+    print(report)
+    return 0 if report.causes else 1
+
+
+def cmd_deps(crud, args) -> int:
+    from .reasoning import dependency_closure
+    d = dependency_closure(crud.store, args.id)
+    print(f"依赖闭包 {d.task_id}：")
+    print(f"  能力 {len(d.capabilities)} 项：{d.capabilities}")
+    print(f"  部件 {len(d.parts)} 项：{d.parts}")
+    print(f"  约束 {len(d.constraints)} 项：{d.constraints}")
+    print(f"  机器人：{d.robot}")
+    return 0
+
+
 def cmd_action(crud, args) -> int:
     from .actions import build_registry
     reg = build_registry(crud)
@@ -330,6 +348,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = sub.add_parser("intercept", help="动作拦截检查（Gate B）"); p.add_argument("id")
     p = sub.add_parser("path", help="两点最短路径查询")
     p.add_argument("src"); p.add_argument("dst")
+    p = sub.add_parser("root-cause", help="故障根因溯源（症状→因果链→根因）")
+    p.add_argument("id", help="症状 id（任务或能力）")
+    p = sub.add_parser("deps", help="任务依赖闭包（能力/部件/约束/机器人）")
+    p.add_argument("id")
     p = sub.add_parser("platform-telemetry", help="本体 → 平台遥测桥接（docs/06）")
     p.add_argument("--robot", default="eo:robot/ti5")
     p = sub.add_parser("hardware-build", help="硬件蓝图 → 本体的自动生成")
@@ -358,7 +380,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         "set": cmd_set, "unset": cmd_unset, "link": cmd_link, "unlink": cmd_unlink,
         "delete": cmd_delete, "validate": cmd_validate, "jsonld-validate": cmd_jsonld_validate, "export": cmd_export,
         "action": cmd_action, "action-list": cmd_action_list,
-        "intercept": cmd_intercept, "path": cmd_path, "view": cmd_view,
+        "intercept": cmd_intercept, "path": cmd_path, "root-cause": cmd_root_cause,
+        "deps": cmd_deps, "view": cmd_view,
         "platform-telemetry": cmd_platform_telemetry,
         "hardware-build": cmd_hardware_build, "dataset": cmd_dataset,
     }
