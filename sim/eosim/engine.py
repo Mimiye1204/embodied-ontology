@@ -15,7 +15,7 @@ from eo.actions import build_registry
 from eo.crud import OntologyCRUD, ValidationError as GateAError
 from eo.io import load_entities_file
 from eo.jsonld import export_jsonld
-from eo.rules import DOMAIN_RULES, check_reachability, intercept_action
+from eo.rules import DOMAIN_RULES, FAULT_RULES, check_reachability, intercept_action
 from eo.rules.framework import RuleEngine
 from eo.timeseries import SqliteTelemetryStore
 from eo.timeseries.binding import BindingRegistry
@@ -65,7 +65,7 @@ class SimulationEngine:
 
         # ---- 规则引擎框架（证明链/动态属性/动作绑定） ----
         self.rules = RuleEngine(self.store, bindings=self.bindings, actions=self.actions)
-        self.rules.add_rules(DOMAIN_RULES)
+        self.rules.add_rules(DOMAIN_RULES + FAULT_RULES)
 
         self.runtime = RobotRuntime(self, seed)
         self.dispatcher = TaskDispatcher(self)

@@ -137,7 +137,12 @@ class RuleEngine:
     def _assert(self, spec: RuleSpec, s: str, p: str, v: Any,
                 evidence: List[str]) -> bool:
         key = (s, p)
-        if key in self.facts:
+        existing = self.facts.get(key)
+        if existing is not None:
+            # 多因事实：已存在则累加新证据（完整证明链），不算新事实
+            for ev in evidence:
+                if ev not in existing.evidence:
+                    existing.evidence.append(ev)
             return False
         self.facts[key] = Fact(s, p, v, spec.name, self._round, evidence)
         return True
