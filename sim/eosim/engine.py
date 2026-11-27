@@ -23,6 +23,7 @@ from eo.timeseries.binding import BindingRegistry
 from .clock import iso
 from .dispatch import TaskDispatcher
 from .faults import FaultInjector
+from .robot import instantiate_robots
 from .runtime import RobotRuntime
 from .timeline import Timeline
 
@@ -69,10 +70,12 @@ class SimulationEngine:
         self.runtime = RobotRuntime(self, seed)
         self.dispatcher = TaskDispatcher(self)
         self.injector = FaultInjector(self)
+        self.robots = instantiate_robots(self)   # 本体导入 → 自动实例化机器人
         self._log_seq = 0
 
         self.rules.run()
         self.timeline.event(0, "boot", f"世界就绪：{len(entities)} 实体过 Gate A，"
+                                       f"实例化 {len(self.robots)} 台机器人，"
                                        f"规则引擎推出 {len(self.rules.facts)} 条事实，"
                                        f"时序绑定 {len(self.bindings.bindings)} 个")
 
