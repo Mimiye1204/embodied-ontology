@@ -9,3 +9,8 @@ psycopg[binary]>=3.1 # 时序存储（生产，TimescaleDB/PostgreSQL）
 
 # 开发/测试
 pytest>=8            # 单元测试（tests/ 套件）
+
+# REST API（server/，输出给调度中台）
+fastapi>=0.110       # Web 框架
+uvicorn>=0.29        # ASGI 服务器
+httpx>=0.27          # TestClient 测试依赖
