@@ -179,6 +179,25 @@ def cmd_action_list(crud, args) -> int:
     return 0
 
 
+def cmd_platform_telemetry(crud, args) -> int:
+    """本体 → 平台 TelemetryPayload（docs/06 桥接；演示遥测，生产读 TimescaleDB）。"""
+    from .platform import build_platform_telemetry
+    from .timeseries import SqliteTelemetryStore
+    from .timeseries.binding import BindingRegistry
+
+    ts = SqliteTelemetryStore(":memory:")
+    ts.insert("eo:robot/ti5", "battery", 86.0, "2026-11-25T10:00:00")
+    ts.insert("eo:part/ti5/six-axis-force", "force_reading", 4.0, "2026-11-25T10:00:01")
+    ts.insert("eo:part/ti5/wrist", "joint_angle", 32.0, "2026-11-25T10:00:01")
+    bindings = BindingRegistry(crud.store, ts)
+    payload = build_platform_telemetry(crud.store, ts, bindings, args.robot)
+    if payload is None:
+        print(f"✗ 机器人 {args.robot} 不存在")
+        return 1
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
 def cmd_intercept(crud, args) -> int:
     from .rules import intercept_report
     report = intercept_report(crud.store, args.id)
@@ -260,6 +279,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = sub.add_parser("intercept", help="动作拦截检查（Gate B）"); p.add_argument("id")
     p = sub.add_parser("path", help="两点最短路径查询")
     p.add_argument("src"); p.add_argument("dst")
+    p = sub.add_parser("platform-telemetry", help="本体 → 平台遥测桥接（docs/06）")
+    p.add_argument("--robot", default="eo:robot/ti5")
 
     args = parser.parse_args(argv)
     try:
@@ -274,6 +295,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "delete": cmd_delete, "validate": cmd_validate, "export": cmd_export,
         "action": cmd_action, "action-list": cmd_action_list,
         "intercept": cmd_intercept, "path": cmd_path, "view": cmd_view,
+        "platform-telemetry": cmd_platform_telemetry,
     }
     return handlers[args.cmd](crud, args)
 
