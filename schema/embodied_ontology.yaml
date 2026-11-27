@@ -309,6 +309,7 @@ classes:
           - mode_code
     slots:
       - mode_code
+      - dtc_code
       - affects_bodypart
       - affects_capability
       - default_severity
@@ -563,6 +564,9 @@ slots:
     range: string
     required: true
     description: 故障模式编码（业务唯一键）
+  dtc_code:
+    range: string
+    description: 诊断故障码（DTC，车载/设备诊断系统上报的标准码，映射到本故障模式）
   affects_bodypart:
     range: BodyPart
     multivalued: true

@@ -330,6 +330,9 @@ eo:FaultModeShape a sh:NodeShape ;
             sh:path eo:description ],
         [ sh:datatype xsd:string ;
             sh:maxCount 1 ;
+            sh:path eo:dtc_code ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
             sh:minCount 1 ;
             sh:path eo:label ],
         [ sh:datatype xsd:string ;

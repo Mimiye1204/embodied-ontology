@@ -323,7 +323,8 @@
       "eo:cap/force-control"
     ],
     "default_severity": "critical",
-    "created_at": "2026-11-20T08:00:00+08:00"
+    "created_at": "2026-11-20T08:00:00+08:00",
+    "dtc_code": "C1001"
   },
   {
     "id": "eo:faultmode/hand-motor-failure",
@@ -339,7 +340,8 @@
       "eo:cap/press"
     ],
     "default_severity": "critical",
-    "created_at": "2026-11-20T08:00:00+08:00"
+    "created_at": "2026-11-20T08:00:00+08:00",
+    "dtc_code": "C1002"
   },
   {
     "id": "eo:task/carry-cup",

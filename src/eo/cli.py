@@ -159,6 +159,18 @@ def cmd_export(crud, args) -> int:
     return 0
 
 
+def cmd_dtc(crud, args) -> int:
+    """接收 DTC → 图推理：根因 + 级联告警 + 安全约束判断。"""
+    import json
+    from .diagnosis import diagnosis_text, receive_dtc
+
+    fleet = json.load(open(os.path.join(ROOT, "examples", "fleet.json"), encoding="utf-8"))
+    faults = json.load(open(os.path.join(ROOT, "examples", "faults.json"), encoding="utf-8"))
+    d = receive_dtc(fleet + faults, args.code)
+    print(diagnosis_text(d))
+    return 0 if d is not None else 1
+
+
 def cmd_evaluate(crud, args) -> int:
     """故障溯源评测报告（一致性 + 根因准确交叉验证）。"""
     import json
@@ -377,6 +389,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--out")
     p = sub.add_parser("evaluate", help="故障溯源评测报告（一致性+根因准确）")
     p.add_argument("--tasks", help="任务 id（逗号分隔）")
+    p = sub.add_parser("dtc", help="接收 DTC → 根因+级联告警+安全约束判断")
+    p.add_argument("code", help="诊断故障码（如 C1001）")
 
     args = parser.parse_args(argv)
     # hardware-build / dataset 从独立数据源生成，不依赖 state 文件
@@ -386,6 +400,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return cmd_dataset(None, args)
     if args.cmd == "evaluate":
         return cmd_evaluate(None, args)
+    if args.cmd == "dtc":
+        return cmd_dtc(None, args)
     try:
         crud = _load(args)
     except ValidationError as e:
@@ -401,7 +417,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "deps": cmd_deps, "view": cmd_view,
         "platform-telemetry": cmd_platform_telemetry,
         "hardware-build": cmd_hardware_build, "dataset": cmd_dataset,
-        "evaluate": cmd_evaluate,
+        "evaluate": cmd_evaluate, "dtc": cmd_dtc,
     }
     return handlers[args.cmd](crud, args)
 

@@ -1,11 +1,107 @@
 [
-  {"id": "eo:faultmode/arm-motor-failure", "type": "FaultMode", "label": "手臂电机失效", "mode_code": "arm-motor-failure", "affects_bodypart": ["eo:part/ti5/arm"], "affects_capability": ["eo:cap/pour", "eo:cap/push"], "default_severity": "critical", "created_at": "2026-11-20T08:00:00+08:00"},
-  {"id": "eo:faultmode/base-drive-failure", "type": "FaultMode", "label": "底盘驱动失效", "mode_code": "base-drive-failure", "affects_bodypart": ["eo:part/ti5/base"], "affects_capability": ["eo:cap/locomotion", "eo:cap/push"], "default_severity": "critical", "created_at": "2026-11-20T08:00:00+08:00"},
-  {"id": "eo:faultmode/waist-motor-failure", "type": "FaultMode", "label": "腰部电机失效", "mode_code": "waist-motor-failure", "affects_bodypart": ["eo:part/ti5/waist"], "default_severity": "warning", "created_at": "2026-11-20T08:00:00+08:00"},
-  {"id": "eo:faultmode/comm-loss", "type": "FaultMode", "label": "通信丢失", "mode_code": "comm-loss", "affects_bodypart": ["eo:part/ti5/head"], "default_severity": "warning", "created_at": "2026-11-20T08:00:00+08:00"},
-
-  {"id": "eo:event/fault-002", "type": "FaultEvent", "label": "灵巧手电机故障", "of_mode": "eo:faultmode/hand-motor-failure", "affects_bodypart": "eo:part/ti5/dexterous-hand", "severity": "warning", "status": "active", "detected_at": "2026-11-27T11:00:00+08:00", "reported_by": "eo:robot/ti5", "created_at": "2026-11-27T11:00:00+08:00"},
-  {"id": "eo:event/fault-003", "type": "FaultEvent", "label": "底盘驱动故障", "of_mode": "eo:faultmode/base-drive-failure", "affects_bodypart": "eo:part/ti5/base", "severity": "critical", "status": "active", "detected_at": "2026-11-27T11:10:00+08:00", "reported_by": "eo:robot/ti5", "created_at": "2026-11-27T11:10:00+08:00"},
-  {"id": "eo:event/fault-004", "type": "FaultEvent", "label": "手臂电机故障（已恢复）", "of_mode": "eo:faultmode/arm-motor-failure", "affects_bodypart": "eo:part/ti5/arm", "severity": "critical", "status": "resolved", "detected_at": "2026-11-26T09:00:00+08:00", "resolved_at": "2026-11-26T10:00:00+08:00", "reported_by": "eo:robot/ti5", "created_at": "2026-11-26T09:00:00+08:00"},
-  {"id": "eo:event/fault-005", "type": "FaultEvent", "label": "通信丢失", "of_mode": "eo:faultmode/comm-loss", "affects_bodypart": "eo:part/ti5/head", "severity": "warning", "status": "active", "detected_at": "2026-11-27T11:20:00+08:00", "reported_by": "eo:robot/ti5", "created_at": "2026-11-27T11:20:00+08:00"}
+  {
+    "id": "eo:faultmode/arm-motor-failure",
+    "type": "FaultMode",
+    "label": "手臂电机失效",
+    "mode_code": "arm-motor-failure",
+    "affects_bodypart": [
+      "eo:part/ti5/arm"
+    ],
+    "affects_capability": [
+      "eo:cap/pour",
+      "eo:cap/push"
+    ],
+    "default_severity": "critical",
+    "created_at": "2026-11-20T08:00:00+08:00",
+    "dtc_code": "C1003"
+  },
+  {
+    "id": "eo:faultmode/base-drive-failure",
+    "type": "FaultMode",
+    "label": "底盘驱动失效",
+    "mode_code": "base-drive-failure",
+    "affects_bodypart": [
+      "eo:part/ti5/base"
+    ],
+    "affects_capability": [
+      "eo:cap/locomotion",
+      "eo:cap/push"
+    ],
+    "default_severity": "critical",
+    "created_at": "2026-11-20T08:00:00+08:00",
+    "dtc_code": "C1004"
+  },
+  {
+    "id": "eo:faultmode/waist-motor-failure",
+    "type": "FaultMode",
+    "label": "腰部电机失效",
+    "mode_code": "waist-motor-failure",
+    "affects_bodypart": [
+      "eo:part/ti5/waist"
+    ],
+    "default_severity": "warning",
+    "created_at": "2026-11-20T08:00:00+08:00",
+    "dtc_code": "C1005"
+  },
+  {
+    "id": "eo:faultmode/comm-loss",
+    "type": "FaultMode",
+    "label": "通信丢失",
+    "mode_code": "comm-loss",
+    "affects_bodypart": [
+      "eo:part/ti5/head"
+    ],
+    "default_severity": "warning",
+    "created_at": "2026-11-20T08:00:00+08:00",
+    "dtc_code": "U1006"
+  },
+  {
+    "id": "eo:event/fault-002",
+    "type": "FaultEvent",
+    "label": "灵巧手电机故障",
+    "of_mode": "eo:faultmode/hand-motor-failure",
+    "affects_bodypart": "eo:part/ti5/dexterous-hand",
+    "severity": "warning",
+    "status": "active",
+    "detected_at": "2026-11-27T11:00:00+08:00",
+    "reported_by": "eo:robot/ti5",
+    "created_at": "2026-11-27T11:00:00+08:00"
+  },
+  {
+    "id": "eo:event/fault-003",
+    "type": "FaultEvent",
+    "label": "底盘驱动故障",
+    "of_mode": "eo:faultmode/base-drive-failure",
+    "affects_bodypart": "eo:part/ti5/base",
+    "severity": "critical",
+    "status": "active",
+    "detected_at": "2026-11-27T11:10:00+08:00",
+    "reported_by": "eo:robot/ti5",
+    "created_at": "2026-11-27T11:10:00+08:00"
+  },
+  {
+    "id": "eo:event/fault-004",
+    "type": "FaultEvent",
+    "label": "手臂电机故障（已恢复）",
+    "of_mode": "eo:faultmode/arm-motor-failure",
+    "affects_bodypart": "eo:part/ti5/arm",
+    "severity": "critical",
+    "status": "resolved",
+    "detected_at": "2026-11-26T09:00:00+08:00",
+    "resolved_at": "2026-11-26T10:00:00+08:00",
+    "reported_by": "eo:robot/ti5",
+    "created_at": "2026-11-26T09:00:00+08:00"
+  },
+  {
+    "id": "eo:event/fault-005",
+    "type": "FaultEvent",
+    "label": "通信丢失",
+    "of_mode": "eo:faultmode/comm-loss",
+    "affects_bodypart": "eo:part/ti5/head",
+    "severity": "warning",
+    "status": "active",
+    "detected_at": "2026-11-27T11:20:00+08:00",
+    "reported_by": "eo:robot/ti5",
+    "created_at": "2026-11-27T11:20:00+08:00"
+  }
 ]
