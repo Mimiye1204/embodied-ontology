@@ -159,6 +159,29 @@ def cmd_export(crud, args) -> int:
     return 0
 
 
+def cmd_dataset(crud, args) -> int:
+    """生成带语义标签的数据集（本体导入 + 故障注入 + 规则推理 → 标注样本）。"""
+    import json
+    from .dataset import export_dataset, generate_labeled_dataset
+
+    fleet = json.load(open(os.path.join(ROOT, "examples", "fleet.json"), encoding="utf-8"))
+    faults = json.load(open(os.path.join(ROOT, "examples", "faults.json"), encoding="utf-8"))
+    samples = generate_labeled_dataset(
+        fleet + faults,
+        task_ids=args.tasks.split(",") if args.tasks else None,
+        fault_modes=args.modes.split(",") if args.modes else None,
+    )
+    if args.out:
+        export_dataset(samples, args.out, format=args.format)
+        print(f"✓ 生成 {len(samples)} 条语义标注样本 → {args.out}（{args.format}）")
+    else:
+        print(f"✓ 生成 {len(samples)} 条语义标注样本，示例：")
+        for s in samples[:4]:
+            print(f"  {s['id']:52s} verdict={s['verdict']:10s} "
+                  f"affected={str(s['affected']):5s} 失效={len(s['lost_capabilities'])}")
+    return 0
+
+
 def cmd_hardware_build(crud, args) -> int:
     """硬件蓝图 → 本体 Object/Link/绑定 Action 自动生成（Gate A 校验）。"""
     from .hardware import build_from_blueprint, load_blueprint
@@ -312,11 +335,18 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = sub.add_parser("hardware-build", help="硬件蓝图 → 本体的自动生成")
     p.add_argument("--blueprint", default="hardware/ti5.yaml", help="硬件蓝图文件")
     p.add_argument("--out")
+    p = sub.add_parser("dataset", help="生成带语义标签的数据集")
+    p.add_argument("--tasks", help="任务 id（逗号分隔）")
+    p.add_argument("--modes", help="故障模式（逗号分隔）")
+    p.add_argument("--format", choices=["json", "jsonl"], default="json")
+    p.add_argument("--out")
 
     args = parser.parse_args(argv)
-    # hardware-build 从蓝图独立建本体，不依赖 state 文件
+    # hardware-build / dataset 从独立数据源生成，不依赖 state 文件
     if args.cmd == "hardware-build":
         return cmd_hardware_build(None, args)
+    if args.cmd == "dataset":
+        return cmd_dataset(None, args)
     try:
         crud = _load(args)
     except ValidationError as e:
@@ -330,7 +360,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "action": cmd_action, "action-list": cmd_action_list,
         "intercept": cmd_intercept, "path": cmd_path, "view": cmd_view,
         "platform-telemetry": cmd_platform_telemetry,
-        "hardware-build": cmd_hardware_build,
+        "hardware-build": cmd_hardware_build, "dataset": cmd_dataset,
     }
     return handlers[args.cmd](crud, args)
 
