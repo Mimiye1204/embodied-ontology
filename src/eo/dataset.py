@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from .graph import MemoryStore
 from .graph.loader import load_entities
+from .reasoning import trace_root_cause
 from .rules import DOMAIN_RULES, FAULT_RULES, check_reachability, intercept_action
 from .rules.framework import RuleEngine
 from .shacl import validate_entities
@@ -81,6 +82,7 @@ def generate_labeled_dataset(
             affected = eng.facts.get((task["id"], "affected_by_fault")) is not None
             health = {n.id: n.get("health", "ok") for n in store.nodes()
                       if n.type == "BodyPart"}
+            root_causes = [c.entity for c in trace_root_cause(store, task["id"]).causes]
 
             samples.append({
                 "id": f"{task['id']}|{scenario_id}",
@@ -96,6 +98,7 @@ def generate_labeled_dataset(
                 "lost_capabilities": lost,
                 "verdict": r.verdict,
                 "affected": affected,
+                "root_causes": root_causes,
                 "interceptions": [h.kind for h in hits],
                 "interception_rewrites": [h.rewrite for h in hits],
             })

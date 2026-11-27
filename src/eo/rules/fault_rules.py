@@ -1,46 +1,32 @@
 # -*- coding: utf-8 -*-
-"""故障传播规则（声明式，RuleSpec 融入规则引擎）。
+"""故障传播规则（声明式，冗余感知）。
 
-把故障传播从「过程式遍历」升级为「规则推导」，推导出的结论是带证明链的事实：
-  - (capability, "lost", True)          能力失效
-  - (task, "affected_by_fault", True)   任务受故障影响
+核心语义：能力「失效」（lost）当且仅当其**所有提供部件都故障**（无健康提供者）。
+这与可达性判定（check_reachability）的冗余逻辑一致——冗余部件仍可用，能力不失效。
 
-两条触发路径（互补）：
-  ① 部件故障：BodyPart.health=fault ──provides_capability──> 能力失效
-  ② 故障事件：活跃 FaultEvent ──of_mode──> FaultMode ──affects_capability──> 能力失效
-  ③ 级联：失效能力 ──requires_capability(反向)──> 依赖任务受影响
-
-优先级保证单轮内完成整条链（①/② 先于 ③）。explain() 可回溯「为什么这个任务受影响」。
+故障模式库（FaultMode.affects_capability）用于 fault.report 动作与根因溯源
+（trace_root_cause：事件 → 模式），前向传播由部件健康状态驱动。
 """
 from __future__ import annotations
 
 from .framework import RuleContext, RuleSpec
 
 
-def _part_fault(ctx: RuleContext) -> None:
-    """① 故障部件 → 提供的能力失效。"""
-    for part in ctx.nodes("BodyPart"):
-        if part.get("health") != "fault":
+def _capability_lost(ctx: RuleContext) -> None:
+    """能力失效：所有提供部件均故障（冗余感知）。"""
+    for cap in ctx.nodes("Capability"):
+        providers = ctx.in_links(cap.id, "provides_capability")
+        if not providers:
             continue
-        for cap in ctx.out_links(part.id, "provides_capability"):
+        healths = [p.get("health", "ok") for p in providers]
+        if all(h == "fault" for h in healths):
+            faulted = sorted(p.id for p in providers if p.get("health") == "fault")
             ctx.assert_(cap.id, "lost", True,
-                        evidence=[f"故障部件 {part.id} 无法提供该能力"])
-
-
-def _event_fault(ctx: RuleContext) -> None:
-    """② 活跃故障事件 → 模式 → 能力失效（模式库驱动）。"""
-    for ev in ctx.nodes("FaultEvent"):
-        if ev.get("status") != "active":
-            continue
-        for mode in ctx.out_links(ev.id, "of_mode"):
-            for cap in ctx.out_links(mode.id, "affects_capability"):
-                ctx.assert_(cap.id, "lost", True,
-                            evidence=[f"活跃事件 {ev.id}（{ev.get('label', '')}）"
-                                      f"关联模式 {mode.id}"])
+                        evidence=[f"提供者全部故障：{faulted}"])
 
 
 def _cap_lost_affects_tasks(ctx: RuleContext) -> None:
-    """③ 失效能力 → 依赖它的任务受影响。"""
+    """失效能力 → 依赖它的任务受影响。"""
     for cap in ctx.nodes("Capability"):
         if ctx.known(cap.id, "lost") is None:
             continue
@@ -50,10 +36,8 @@ def _cap_lost_affects_tasks(ctx: RuleContext) -> None:
 
 
 FAULT_RULES = [
-    RuleSpec("part_fault→capability_lost", "故障部件 → 提供能力失效",
-             category="fault", priority=500, fire=_part_fault),
-    RuleSpec("event→mode→capability_lost", "活跃故障事件 → 模式 → 能力失效",
-             category="fault", priority=500, fire=_event_fault),
+    RuleSpec("capability_lost", "能力提供者全部故障 → 失效（冗余感知）",
+             category="fault", priority=500, fire=_capability_lost),
     RuleSpec("capability_lost→task_affected", "失效能力 → 依赖任务受影响",
              category="fault", priority=400, fire=_cap_lost_affects_tasks),
 ]

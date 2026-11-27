@@ -159,6 +159,19 @@ def cmd_export(crud, args) -> int:
     return 0
 
 
+def cmd_evaluate(crud, args) -> int:
+    """故障溯源评测报告（一致性 + 根因准确交叉验证）。"""
+    import json
+    from .evaluation import evaluate, report_text
+
+    fleet = json.load(open(os.path.join(ROOT, "examples", "fleet.json"), encoding="utf-8"))
+    faults = json.load(open(os.path.join(ROOT, "examples", "faults.json"), encoding="utf-8"))
+    report = evaluate(fleet + faults,
+                      task_ids=args.tasks.split(",") if args.tasks else None)
+    print(report_text(report))
+    return 0 if not report.inconsistencies and not report.root_cause_misses else 1
+
+
 def cmd_dataset(crud, args) -> int:
     """生成带语义标签的数据集（本体导入 + 故障注入 + 规则推理 → 标注样本）。"""
     import json
@@ -362,6 +375,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--modes", help="故障模式（逗号分隔）")
     p.add_argument("--format", choices=["json", "jsonl"], default="json")
     p.add_argument("--out")
+    p = sub.add_parser("evaluate", help="故障溯源评测报告（一致性+根因准确）")
+    p.add_argument("--tasks", help="任务 id（逗号分隔）")
 
     args = parser.parse_args(argv)
     # hardware-build / dataset 从独立数据源生成，不依赖 state 文件
@@ -369,6 +384,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return cmd_hardware_build(None, args)
     if args.cmd == "dataset":
         return cmd_dataset(None, args)
+    if args.cmd == "evaluate":
+        return cmd_evaluate(None, args)
     try:
         crud = _load(args)
     except ValidationError as e:
@@ -384,6 +401,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "deps": cmd_deps, "view": cmd_view,
         "platform-telemetry": cmd_platform_telemetry,
         "hardware-build": cmd_hardware_build, "dataset": cmd_dataset,
+        "evaluate": cmd_evaluate,
     }
     return handlers[args.cmd](crud, args)
 
